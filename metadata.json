@@ -1,0 +1,5 @@
+{
+  "name": "StockMaster POS",
+  "description": "A comprehensive inventory management system with integrated Point of Sale (POS) functionality, powered by Supabase.",
+  "requestFramePermissions": []
+}

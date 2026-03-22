@@ -1,0 +1,367 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: "Outfit", sans-serif;
+    --font-sans: "Outfit", sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+
+    /* Layout Tokens */
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+
+    /* UI Tokens */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    /* Radius */
+    --radius-sm: calc(var(--radius) * 0.5);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.5);
+}
+
+/* ─────────────────────────────────────────
+   FLUID TYPE SCALE
+   Scales smoothly from 320px → 1280px+
+   Formula: clamp(min, preferred, max)
+   ───────────────────────────────────────── */
+:root {
+    /* Modern Indigo/Slate Scheme */
+    --background: oklch(0.99 0.01 240);
+    --foreground: oklch(0.25 0.05 240);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.25 0.05 240);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.25 0.05 240);
+
+    --primary: oklch(0.55 0.18 250);
+    --primary-foreground: oklch(0.99 0.01 240);
+
+    --secondary: oklch(0.95 0.02 240);
+    --secondary-foreground: oklch(0.45 0.1 250);
+
+    --muted: oklch(0.92 0.01 240);
+    --muted-foreground: oklch(0.55 0.05 240);
+
+    --accent: oklch(0.92 0.03 240);
+    --accent-foreground: oklch(0.4 0.12 250);
+
+    --destructive: oklch(0.6 0.18 20);
+    --border: oklch(0.9 0.02 240);
+    --input: oklch(0.9 0.02 240);
+    --ring: oklch(0.55 0.18 250 / 0.4);
+
+    --radius: 0.5rem;
+
+    --sidebar: oklch(0.98 0.01 240);
+    --sidebar-foreground: oklch(0.3 0.05 240);
+    --sidebar-primary: oklch(0.55 0.18 250);
+    --sidebar-primary-foreground: oklch(0.99 0.01 240);
+    --sidebar-accent: oklch(0.94 0.02 240);
+    --sidebar-accent-foreground: oklch(0.55 0.18 250);
+    --sidebar-border: oklch(0.9 0.02 240);
+
+    /* ── Fluid spacing scale ── */
+    --space-xs: clamp(0.25rem, 0.5vw, 0.5rem);
+    --space-sm: clamp(0.5rem, 1vw, 0.75rem);
+    --space-md: clamp(0.75rem, 1.5vw, 1rem);
+    --space-lg: clamp(1rem, 2vw, 1.5rem);
+    --space-xl: clamp(1.25rem, 2.5vw, 2rem);
+    --space-2xl: clamp(1.5rem, 3vw, 3rem);
+
+    /* ── Fluid type sizes ── */
+    --text-2xs: clamp(0.6rem, 0.5vw + 0.4rem, 0.65rem);
+    --text-xs: clamp(0.65rem, 0.5vw + 0.5rem, 0.75rem);
+    --text-sm: clamp(0.75rem, 0.6vw + 0.55rem, 0.875rem);
+    --text-base: clamp(0.875rem, 0.8vw + 0.6rem, 1rem);
+    --text-lg: clamp(1rem, 1vw + 0.7rem, 1.125rem);
+    --text-xl: clamp(1.1rem, 1.5vw + 0.75rem, 1.25rem);
+    --text-2xl: clamp(1.25rem, 2vw + 0.8rem, 1.5rem);
+    --text-3xl: clamp(1.5rem, 3vw + 0.8rem, 1.875rem);
+    --text-4xl: clamp(1.75rem, 4vw + 0.8rem, 2.25rem);
+}
+
+.dark {
+    --background: #171717;
+    --foreground: oklch(0.92 0.01 0);
+    --card: #1c1c1c;
+    --card-foreground: oklch(0.92 0.01 0);
+    --popover: #1c1c1c;
+    --popover-foreground: oklch(0.92 0.01 0);
+
+    --primary: #fbbf24;
+    --primary-foreground: #171717;
+
+    --secondary: #262626;
+    --secondary-foreground: oklch(0.92 0.01 0);
+
+    --muted: #262626;
+    --muted-foreground: oklch(0.65 0.01 0);
+
+    --accent: #fbbf24;
+    --accent-foreground: #171717;
+
+    --destructive: oklch(0.5 0.15 25);
+    --border: #333333;
+    --input: #333333;
+    --ring: #fbbf24;
+
+    --sidebar: #121212;
+    --sidebar-foreground: oklch(0.8 0.01 0);
+    --sidebar-primary: #fbbf24;
+    --sidebar-primary-foreground: #171717;
+    --sidebar-accent: #262626;
+    --sidebar-accent-foreground: #fbbf24;
+    --sidebar-border: #333333;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.7);
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+        transition:
+            background-color 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+    html {
+        @apply font-sans;
+        /* Root fluid font size: 14px on mobile → 16px on desktop */
+        font-size: clamp(14px, 0.5vw + 12px, 16px);
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-background text-foreground antialiased selection:bg-primary/30;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+        font-size: var(--text-base);
+        line-height: 1.5;
+    }
+
+    /* ── Responsive heading scale ── */
+    h1 {
+        font-size: var(--text-3xl);
+        font-weight: 900;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+    }
+    h2 {
+        font-size: var(--text-2xl);
+        font-weight: 800;
+        line-height: 1.2;
+    }
+    h3 {
+        font-size: var(--text-xl);
+        font-weight: 700;
+        line-height: 1.3;
+    }
+    h4 {
+        font-size: var(--text-lg);
+        font-weight: 700;
+        line-height: 1.4;
+    }
+    h5 {
+        font-size: var(--text-base);
+        font-weight: 600;
+    }
+    h6 {
+        font-size: var(--text-sm);
+        font-weight: 600;
+    }
+
+    p,
+    li,
+    span {
+        font-size: var(--text-base);
+    }
+
+    small,
+    .text-xs,
+    [class*="text-xs"] {
+        font-size: var(--text-xs) !important;
+    }
+
+    .text-sm,
+    [class*="text-sm"] {
+        font-size: var(--text-sm) !important;
+    }
+
+    .text-base {
+        font-size: var(--text-base) !important;
+    }
+    .text-lg {
+        font-size: var(--text-lg) !important;
+    }
+    .text-xl {
+        font-size: var(--text-xl) !important;
+    }
+    .text-2xl {
+        font-size: var(--text-2xl) !important;
+    }
+    .text-3xl {
+        font-size: var(--text-3xl) !important;
+    }
+    .text-4xl {
+        font-size: var(--text-4xl) !important;
+    }
+
+    /* ── Mono stays crisp ── */
+    .font-mono {
+        @apply font-mono tracking-tight;
+    }
+}
+
+@layer components {
+    /* ── Fluid padding utilities ── */
+    .p-fluid-sm {
+        padding: var(--space-sm);
+    }
+    .p-fluid-md {
+        padding: var(--space-md);
+    }
+    .p-fluid-lg {
+        padding: var(--space-lg);
+    }
+    .px-fluid-md {
+        padding-inline: var(--space-md);
+    }
+    .px-fluid-lg {
+        padding-inline: var(--space-lg);
+    }
+
+    /* ── POS Card ── */
+    .pos-card {
+        @apply bg-card border border-border transition-all hover:border-primary/50 hover:shadow-md cursor-pointer active:scale-[0.98];
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+        @apply bg-transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        @apply bg-muted-foreground/20 rounded-full;
+        transition: background-color 0.2s ease;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        @apply bg-muted-foreground/40;
+    }
+
+    /* ── Label / badge micro text ── */
+    .label-micro {
+        font-size: var(--text-2xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+    }
+}
+
+/* ─────────────────────────────────────────
+   RESPONSIVE BREAKPOINT OVERRIDES
+   Fine-tune spacing and sizing at each bp
+   ───────────────────────────────────────── */
+
+/* Mobile (< 480px) */
+@media (max-width: 480px) {
+    :root {
+        --space-lg: 0.875rem;
+        --space-xl: 1rem;
+        --space-2xl: 1.25rem;
+    }
+
+    /* Tighten page padding on tiny screens */
+    .p-6 {
+        padding: var(--space-md) !important;
+    }
+    .p-8 {
+        padding: var(--space-lg) !important;
+    }
+    .px-8 {
+        padding-inline: var(--space-md) !important;
+    }
+    .px-6 {
+        padding-inline: var(--space-sm) !important;
+    }
+    .gap-6 {
+        gap: var(--space-md) !important;
+    }
+
+    /* Sidebar collapses fully on mobile — hide text by default */
+    aside span {
+        display: none;
+    }
+}
+
+/* Tablet (481px – 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+    :root {
+        --space-xl: 1.25rem;
+        --space-2xl: 1.75rem;
+    }
+
+    .p-8 {
+        padding: var(--space-xl) !important;
+    }
+    .px-8 {
+        padding-inline: var(--space-xl) !important;
+    }
+}
+
+/* ─────────────────────────────────────────
+   PRINT — POS THERMAL RECEIPT
+   ───────────────────────────────────────── */
+@media print {
+    body * {
+        visibility: hidden !important;
+    }
+
+    #receipt-print,
+    #receipt-print * {
+        visibility: visible !important;
+    }
+
+    #receipt-print {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3in;
+        background: white;
+        color: black;
+        padding: 10px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+    }
+}
