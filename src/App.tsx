@@ -245,7 +245,7 @@ export default function App() {
           <div className="bg-primary p-2 rounded-sm">
             <Store className="h-6 w-6 text-primary-foreground" />
           </div>
-          {isSidebarOpen && <span className="font-bold text-xl tracking-tight">StockMaster</span>}
+          {isSidebarOpen && <span className="font-bold text-xl tracking-tight">Ledgr</span>}
         </div>
 
         <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">

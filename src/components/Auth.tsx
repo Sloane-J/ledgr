@@ -1,332 +1,466 @@
 import {
-	ArrowRight,
-	BarChart3,
-	ShieldCheck,
-	Store,
-	UserCircle,
-	Zap,
+  ArrowLeft,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Store,
+  UserCircle,
+  Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type * as React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { hasSupabaseConfig, supabase } from "@/src/lib/supabase";
+import { cn } from "@/lib/utils";
+
+type Page = "login" | "signup";
 
 export function Auth() {
-	const [loading, setLoading] = useState(false);
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
-	const [isSignUp, setIsSignUp] = useState(false);
-	const [users, setUsers] = useState<
-		{ email: string; full_name: string | null }[]
-	>([]);
+  const [page, setPage] = useState<Page>("login");
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [users, setUsers] = useState<{ email: string; full_name: string | null }[]>([]);
+  const [direction, setDirection] = useState(1);
 
-	useEffect(() => {
-		if (hasSupabaseConfig) {
-			fetchUsers();
-		}
-	}, []);
+  useEffect(() => {
+    if (hasSupabaseConfig) fetchUsers();
+  }, []);
 
-	const fetchUsers = async () => {
-		try {
-			const { data, error } = await supabase
-				.from("profiles")
-				.select("email, full_name")
-				.order("full_name", { ascending: true });
+  const goTo = (p: Page) => {
+    setDirection(p === "signup" ? 1 : -1);
+    setEmail("");
+    setPassword("");
+    setShowPassword(false);
+    setPage(p);
+  };
 
-			if (error) throw error;
-			if (data) setUsers(data);
-		} catch (error: any) {
-			console.error("Error fetching users:", error.message);
-			if (hasSupabaseConfig) {
-				toast.error("Failed to load user list: " + error.message);
-			}
-		}
-	};
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("email, full_name")
+        .order("full_name", { ascending: true });
+      if (error) throw error;
+      if (data) setUsers(data);
+    } catch (error: any) {
+      if (hasSupabaseConfig) toast.error("Failed to load user list: " + error.message);
+    }
+  };
 
-	const handleAuth = async (e: React.FormEvent) => {
-		e.preventDefault();
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hasSupabaseConfig) { toast.error("Supabase config missing."); return; }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("Welcome back!");
+    } catch (error: any) {
+      toast.error(error.message === "Failed to fetch" ? "Connection refused. Check your Supabase URL." : error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-		if (!hasSupabaseConfig) {
-			toast.error("Supabase configuration is missing. Check your .env file.");
-			return;
-		}
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hasSupabaseConfig) { toast.error("Supabase config missing."); return; }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email, password,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) throw error;
+      toast.success("Check your email for the confirmation link!");
+    } catch (error: any) {
+      toast.error(error.message === "Failed to fetch" ? "Connection refused. Check your Supabase URL." : error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-		setLoading(true);
-		try {
-			if (isSignUp) {
-				const { error } = await supabase.auth.signUp({ 
-					email, 
-					password,
-					options: {
-						emailRedirectTo: window.location.origin,
-					}
-				});
-				if (error) throw error;
-				toast.success("Check your email for the confirmation link!");
-			} else {
-				const { error } = await supabase.auth.signInWithPassword({
-					email,
-					password,
-				});
-				if (error) throw error;
-				toast.success("Logged in successfully!");
-			}
-		} catch (error: any) {
-			// "Failed to fetch" usually means the URL is wrong or the network is down
-			const message = error.message === "Failed to fetch" 
-				? "Connection refused. Please check your Supabase URL and internet."
-				: error.message;
-			toast.error(message || "An error occurred");
-		} finally {
-			setLoading(false);
-		}
-	};
+  const passwordStrength = password.length === 0 ? 0
+    : password.length < 6 ? 1
+    : password.length < 8 ? 2
+    : password.length < 12 ? 3
+    : 4;
 
-	return (
-		<div className="flex min-h-screen bg-background font-sans overflow-hidden">
-			<div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-slate-50 p-16 flex-col justify-between text-slate-900 border-r border-border">
-				<div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent)] pointer-events-none" />
-				<div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
-					<div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-sm bg-primary blur-[120px]" />
-					<div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-sm bg-primary blur-[120px]" />
-				</div>
+  const strengthConfig = [
+    { label: "", color: "" },
+    { label: "Too short", color: "bg-red-500" },
+    { label: "Weak", color: "bg-orange-400" },
+    { label: "Good", color: "bg-yellow-400" },
+    { label: "Strong", color: "bg-emerald-500" },
+  ];
 
-				<motion.div
-					initial={{ opacity: 0, x: -20 }}
-					animate={{ opacity: 1, x: 0 }}
-					className="relative z-10 flex items-center space-x-3"
-				>
-					<div className="bg-primary p-2.5 rounded-sm shadow-sm">
-						<Store className="h-8 w-8 text-primary-foreground" />
-					</div>
-					<span className="text-2xl font-black tracking-tight text-primary">
-						StockMaster
-					</span>
-				</motion.div>
+  const variants = {
+    enter: (d: number) => ({ opacity: 0, x: d * 32 }),
+    center: { opacity: 1, x: 0 },
+    exit: (d: number) => ({ opacity: 0, x: d * -32 }),
+  };
 
-				<div className="relative z-10 space-y-12">
-					<motion.h1
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.8, ease: "easeOut" }}
-						className="text-6xl font-black leading-[1.1] tracking-tight text-slate-900"
-					>
-						Manage your business <br />
-						<span className="text-primary italic font-light">
-							with absolute precision.
-						</span>
-					</motion.h1>
+  return (
+    <div className="min-h-screen flex bg-background">
 
-					<div className="grid grid-cols-1 gap-8 max-w-lg">
-						{[
-							{
-								icon: Zap,
-								title: "Lightning Fast POS",
-								desc: "Process transactions in seconds with our optimized, keyboard-friendly interface.",
-							},
-							{
-								icon: BarChart3,
-								title: "Real-time Analytics",
-								desc: "Track sales, inventory levels, and business performance as it happens.",
-							},
-							{
-								icon: ShieldCheck,
-								title: "Enterprise Security",
-								desc: "Your data is protected with industry-standard encryption and secure access controls.",
-							},
-						].map((feature, i) => (
-							<motion.div
-								key={i}
-								initial={{ opacity: 0, x: -30 }}
-								animate={{ opacity: 1, x: 0 }}
-								transition={{ duration: 0.6, delay: 0.3 + i * 0.15 }}
-								className="flex items-start space-x-5 group"
-							>
-								<div className="bg-white p-3 rounded-sm shadow-sm border border-border group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 transform group-hover:scale-110">
-									<feature.icon className="h-6 w-6" />
-								</div>
-								<div>
-									<h3 className="font-bold text-xl mb-1 text-slate-900">
-										{feature.title}
-									</h3>
-									<p className="text-slate-500 text-base leading-relaxed">
-										{feature.desc}
-									</p>
-								</div>
-							</motion.div>
-						))}
-					</div>
-				</div>
+      {/* ── LEFT BRAND COLUMN ── */}
+      <div className="hidden lg:flex lg:w-[420px] xl:w-[480px] flex-col justify-between bg-primary p-12 shrink-0">
+        {/* Logo */}
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 bg-primary-foreground/15 flex items-center justify-center rounded-lg">
+            <Store className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <span className="text-xl font-black text-primary-foreground tracking-tight">Ledgr</span>
+        </div>
 
-				<motion.div
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
-					transition={{ delay: 1 }}
-					className="relative z-10 text-sm text-slate-400 font-bold uppercase tracking-widest"
-				>
-					© 2026 StockMaster POS Systems.
-				</motion.div>
-			</div>
+        {/* Middle copy */}
+        <div className="space-y-8">
+          <div>
+            <p className="text-primary-foreground/50 text-xs font-black uppercase tracking-[0.3em] mb-4">
+              Built for retail
+            </p>
+            <h2 className="text-4xl font-black text-primary-foreground leading-[1.15] tracking-tight">
+              Run your store.<br />
+              Know your numbers.<br />
+              <span className="text-primary-foreground/40">Always.</span>
+            </h2>
+          </div>
 
-			<div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 sm:p-16 bg-background">
-				<div className="w-full max-w-md space-y-10">
-					<div className="lg:hidden flex items-center justify-center space-x-3 mb-12">
-						<div className="bg-primary p-2 rounded-sm">
-							<Store className="h-7 w-7 text-primary-foreground" />
-						</div>
-						<span className="text-3xl font-bold tracking-tight">
-							StockMaster
-						</span>
-					</div>
+          <div className="space-y-4">
+            {[
+              { title: "Fast POS", desc: "Process sales in seconds from any device." },
+              { title: "Live Inventory", desc: "Stock updates automatically on every sale." },
+              { title: "Clear Reports", desc: "Revenue, trends, and top products at a glance." },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + i * 0.1, duration: 0.4 }}
+                className="flex items-start gap-3"
+              >
+                <div className="h-5 w-5 rounded bg-primary-foreground/15 flex items-center justify-center mt-0.5 shrink-0">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
+                </div>
+                <div>
+                  <p className="text-primary-foreground font-bold text-sm">{item.title}</p>
+                  <p className="text-primary-foreground/50 text-xs mt-0.5">{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
 
-					<div className="space-y-3 text-center lg:text-left">
-						<motion.h2
-							initial={{ opacity: 0, y: 10 }}
-							animate={{ opacity: 1, y: 0 }}
-							className="text-4xl font-bold tracking-tight text-foreground"
-						>
-							{isSignUp ? "Create an account" : "Welcome back"}
-						</motion.h2>
-						<motion.p
-							initial={{ opacity: 0, y: 10 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: 0.1 }}
-							className="text-muted-foreground text-lg"
-						>
-							{isSignUp
-								? "Join thousands of businesses managing their stock better."
-								: "Enter your credentials to access your dashboard."}
-						</motion.p>
-					</div>
+        {/* Footer */}
+        <p className="text-primary-foreground/25 text-xs font-bold uppercase tracking-[0.25em]">
+          © 2026 Ledgr
+        </p>
+      </div>
 
-					<AnimatePresence mode="wait">
-						<motion.div
-							key={isSignUp ? "signup" : "login"}
-							initial={{ opacity: 0, x: 20 }}
-							animate={{ opacity: 1, x: 0 }}
-							exit={{ opacity: 0, x: -20 }}
-							transition={{ duration: 0.4, ease: "easeInOut" }}
-						>
-							<form onSubmit={handleAuth} className="space-y-8">
-								<div className="space-y-5">
-									{!isSignUp && users.length > 0 && (
-										<div className="space-y-2.5">
-											<label className="text-sm font-semibold text-foreground/80 ml-1">
-												Select User
-											</label>
-											<Select value={email} onValueChange={setEmail}>
-												<SelectTrigger className="h-14 rounded-sm border-border bg-muted/30 focus:bg-background transition-all text-base px-5">
-													<SelectValue placeholder="Choose an employee" />
-												</SelectTrigger>
-												<SelectContent>
-													{users.map((u) => (
-														<SelectItem key={u.email} value={u.email}>
-															<div className="flex items-center">
-																<UserCircle className="mr-2 h-4 w-4 text-muted-foreground" />
-																<span>
-																	{u.full_name || u.email.split("@")[0]}
-																</span>
-															</div>
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-										</div>
-									)}
-									<div className="space-y-2.5">
-										<label className="text-sm font-semibold text-foreground/80 ml-1">
-											Email Address
-										</label>
-										<Input
-											type="email"
-											placeholder="name@company.com"
-											value={email}
-											onChange={(e) => setEmail(e.target.value)}
-											required
-											className="h-14 rounded-sm border-border bg-muted/30 focus:bg-background transition-all text-base px-5"
-										/>
-									</div>
-									<div className="space-y-2.5">
-										<div className="flex items-center justify-between ml-1">
-											<label className="text-sm font-semibold text-foreground/80">
-												Password
-											</label>
-											{!isSignUp && (
-												<Button
-													variant="link"
-													className="px-0 font-medium text-sm text-primary h-auto hover:no-underline"
-												>
-													Forgot password?
-												</Button>
-											)}
-										</div>
-										<Input
-											type="password"
-											placeholder="••••••••"
-											value={password}
-											onChange={(e) => setPassword(e.target.value)}
-											required
-											className="h-14 rounded-sm border-border bg-muted/30 focus:bg-background transition-all text-base px-5"
-										/>
-									</div>
-								</div>
+      {/* ── RIGHT FORM COLUMN ── */}
+      <div className="flex-1 flex flex-col">
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-8 sm:px-12 py-6 border-b border-border">
+          {/* Mobile logo */}
+          <div className="flex items-center gap-2 lg:hidden">
+            <div className="h-8 w-8 bg-primary flex items-center justify-center rounded-lg">
+              <Store className="h-4 w-4 text-primary-foreground" />
+            </div>
+            <span className="font-black text-lg tracking-tight">Ledgr</span>
+          </div>
+          <div className="hidden lg:block" />
 
-								<Button
-									className="w-full h-14 text-lg font-bold rounded-sm group shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-[0.98] transition-all"
-									type="submit"
-									disabled={loading}
-								>
-									{loading ? (
-										<span className="flex items-center space-x-3">
-											<Zap className="h-5 w-5 animate-pulse" />
-											<span>Processing...</span>
-										</span>
-									) : (
-										<span className="flex items-center justify-center space-x-2">
-											<span>{isSignUp ? "Create Account" : "Sign In"}</span>
-											<ArrowRight className="h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
-										</span>
-									)}
-								</Button>
-							</form>
-						</motion.div>
-					</AnimatePresence>
+          {/* Page indicator */}
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className={cn("font-bold transition-colors duration-200", page === "login" ? "text-foreground" : "")}>
+              Sign in
+            </span>
+            <span className="text-muted-foreground/40">/</span>
+            <span className={cn("font-bold transition-colors duration-200", page === "signup" ? "text-foreground" : "")}>
+              Create account
+            </span>
+          </div>
+        </div>
 
-					<div className="relative py-4">
-						<div className="absolute inset-0 flex items-center">
-							<span className="w-full border-t border-border" />
-						</div>
-						<div className="relative flex justify-center text-xs uppercase tracking-widest font-bold">
-							<span className="bg-background px-4 text-muted-foreground/60">
-								Or continue with
-							</span>
-						</div>
-					</div>
+        {/* Form area */}
+        <div className="flex-1 flex items-center justify-center px-8 sm:px-12 py-12 overflow-hidden">
+          <div className="w-full max-w-[400px]">
+            <AnimatePresence mode="wait" custom={direction}>
 
-					<div className="text-center">
-						<Button
-							variant="ghost"
-							className="text-base text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all py-6 px-8 rounded-sm"
-							type="button"
-							onClick={() => setIsSignUp(!isSignUp)}
-						>
-							{isSignUp
-								? "Already have an account? Sign in"
-								: "Don't have an account? Create one for free"}
-						</Button>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+              {/* ── LOGIN ── */}
+              {page === "login" && (
+                <motion.div
+                  key="login"
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+                >
+                  <div className="mb-8">
+                    <h1 className="text-3xl font-black tracking-tight text-foreground">
+                      Welcome back
+                    </h1>
+                    <p className="text-muted-foreground text-sm mt-1.5">
+                      Sign in to access your dashboard.
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleLogin} className="space-y-5">
+                    {/* Quick select */}
+                    {users.length > 0 && (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                          Quick select
+                        </label>
+                        <Select value={email} onValueChange={setEmail}>
+                          <SelectTrigger className="h-11 border-border bg-background text-sm">
+                            <SelectValue placeholder="Choose an employee…" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {users.map(u => (
+                              <SelectItem key={u.email} value={u.email}>
+                                <div className="flex items-center gap-2">
+                                  <UserCircle className="h-4 w-4 text-muted-foreground" />
+                                  {u.full_name || u.email.split('@')[0]}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {/* Email */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                        Email
+                      </label>
+                      <Input
+                        type="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        required
+                        autoComplete="email"
+                        className="h-11 border-border bg-background text-sm"
+                      />
+                    </div>
+
+                    {/* Password */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                          Password
+                        </label>
+                        <span className="text-xs font-semibold text-muted-foreground hover:text-primary cursor-pointer transition-colors duration-150">
+                          Forgot password?
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter your password"
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          required
+                          autoComplete="current-password"
+                          className="h-11 border-border bg-background text-sm pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors duration-150"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full h-11 bg-primary text-primary-foreground font-bold text-sm rounded-md flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 group mt-2"
+                    >
+                      {loading
+                        ? <><Zap className="h-4 w-4 animate-pulse" />Signing in…</>
+                        : <>Sign In <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-150" /></>
+                      }
+                    </button>
+                  </form>
+
+                  {/* Switch to signup */}
+                  <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">New to Ledgr?</p>
+                    <button
+                      type="button"
+                      onClick={() => goTo("signup")}
+                      className="text-sm font-bold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors duration-150 group"
+                    >
+                      Create an account
+                      <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform duration-150" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── SIGNUP ── */}
+              {page === "signup" && (
+                <motion.div
+                  key="signup"
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+                >
+                  {/* Back */}
+                  <button
+                    type="button"
+                    onClick={() => goTo("login")}
+                    className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-xs font-bold uppercase tracking-wider transition-colors duration-150 mb-8 group"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform duration-150" />
+                    Back
+                  </button>
+
+                  <div className="mb-8">
+                    <h1 className="text-3xl font-black tracking-tight text-foreground">
+                      Create account
+                    </h1>
+                    <p className="text-muted-foreground text-sm mt-1.5">
+                      You'll need admin approval before you can log in.
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleSignUp} className="space-y-5">
+                    {/* Email */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                        Work Email
+                      </label>
+                      <Input
+                        type="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        required
+                        autoComplete="email"
+                        className="h-11 border-border bg-background text-sm"
+                      />
+                    </div>
+
+                    {/* Password */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="At least 8 characters"
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          required
+                          minLength={8}
+                          autoComplete="new-password"
+                          className="h-11 border-border bg-background text-sm pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors duration-150"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+
+                      {/* Strength bar */}
+                      {password.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="space-y-1.5"
+                        >
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4].map(i => (
+                              <div
+                                key={i}
+                                className={cn(
+                                  "h-1 flex-1 rounded-full transition-all duration-300",
+                                  i <= passwordStrength ? strengthConfig[passwordStrength].color : "bg-muted"
+                                )}
+                              />
+                            ))}
+                          </div>
+                          <p className={cn(
+                            "text-[11px] font-bold transition-colors duration-200",
+                            passwordStrength <= 1 ? "text-red-500" :
+                            passwordStrength === 2 ? "text-orange-400" :
+                            passwordStrength === 3 ? "text-yellow-500" :
+                            "text-emerald-500"
+                          )}>
+                            {strengthConfig[passwordStrength].label}
+                          </p>
+                        </motion.div>
+                      )}
+                    </div>
+
+                    {/* Approval notice */}
+                    <div className="flex gap-3 p-4 bg-muted/50 border border-border rounded-lg">
+                      <ShieldCheck className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        After signing up, an administrator needs to approve your account before you can access the system.
+                      </p>
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full h-11 bg-primary text-primary-foreground font-bold text-sm rounded-md flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 group mt-2"
+                    >
+                      {loading
+                        ? <><Zap className="h-4 w-4 animate-pulse" />Creating account…</>
+                        : <>Create Account <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-150" /></>
+                      }
+                    </button>
+                  </form>
+
+                  {/* Switch to login */}
+                  <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">Already have an account?</p>
+                    <button
+                      type="button"
+                      onClick={() => goTo("login")}
+                      className="text-sm font-bold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors duration-150 group"
+                    >
+                      Sign in
+                      <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform duration-150" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
