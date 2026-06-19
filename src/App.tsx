@@ -329,10 +329,6 @@ export default function App() {
                 {profile?.full_name || session?.user?.email?.split('@')[0]}
               </p>
               <div className="flex items-center justify-end space-x-1.5">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                   {profile?.role === 'admin' ? 'Administrator' : 'Staff Member'}
                 </p>
