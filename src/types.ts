@@ -29,8 +29,15 @@ export interface Product {
 export interface Order {
   id: string;
   user_id: string;
+  customer_id?: string;
+  customer_name?: string;
   total_amount: number;
-  status: 'completed' | 'pending' | 'cancelled';
+  status: 'completed' | 'pending' | 'cancelled' | 'voided' | 'refunded';
+  payment_method?: string;
+  void_reason?: string;
+  voided_at?: string;
+  refund_amount?: number;
+  refunded_at?: string;
   created_at: string;
   profiles?: Profile;
 }
@@ -42,6 +49,22 @@ export interface OrderItem {
   quantity: number;
   unit_price: number;
   product?: Product;
+}
+
+export interface CartItem extends Product {
+  quantity: number;
+}
+
+export interface HeldOrder {
+  id: string;
+  user_id: string;
+  cart: CartItem[];
+  discount: number;
+  order_note: string | null;
+  customer_name: string | null;
+  customer_id: string | null;
+  total: number;
+  created_at: string;
 }
 
 export interface Supplier {
@@ -58,7 +81,7 @@ export interface SupplierOrder {
   id: string;
   supplier_id: string;
   total_amount: number;
-  status: 'pending' | 'ordered' | 'received' | 'cancelled';
+  status: 'completed' | 'pending' | 'cancelled' | 'voided' | 'refunded';
   created_at: string;
   created_by: string;
   supplier?: Supplier;

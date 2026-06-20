@@ -4,7 +4,6 @@ import { supabase } from '@/src/lib/supabase';
 import {
   Package,
   ShoppingCart,
-  DollarSign,
   TrendingUp,
   AlertTriangle,
   ArrowUpRight,
@@ -24,12 +23,28 @@ import {
   YAxis,
   AreaChart,
   Area,
+  ReferenceLine,
 } from 'recharts';
-import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { seedProducts, seedSampleOrders } from '@/src/services/seedService';
+
+const CURRENCY = '₵';
+
+const formatCurrency = (value: number) =>
+  `${CURRENCY}${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const formatShort = (value: number) => {
+  if (value >= 1_000_000) return `${CURRENCY}${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${CURRENCY}${(value / 1_000).toFixed(1)}k`;
+  return `${CURRENCY}${value.toFixed(0)}`;
+};
+
+const calcGrowth = (current: number, previous: number) => {
+  if (previous === 0) return null;
+  return Number((((current - previous) / previous) * 100).toFixed(1));
+};
 
 export function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -40,10 +55,10 @@ export function Dashboard() {
     totalRevenue: 0,
     lowStock: 0,
     avgOrderValue: 0,
-    revenueGrowth: 12.5,
-    orderGrowth: 8.2,
+    revenueGrowth: null as number | null,
+    orderGrowth: null as number | null,
   });
-  const [chartData, setChartData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<{ date: string; revenue: number }[]>([]);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
   const [topProducts, setTopProducts] = useState<any[]>([]);
@@ -69,21 +84,31 @@ export function Dashboard() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [productsRes, ordersRes, lowStockRes] = await Promise.all([
+      const [productsRes, ordersRes, lowStockRes, orderItemsRes] = await Promise.all([
         supabase.from('products').select('*', { count: 'exact', head: true }),
         supabase
           .from('orders')
-          .select('total_amount, created_at, id, profiles(full_name, email)')
+          .select('id, total_amount, created_at, status')
           .order('created_at', { ascending: false }),
-        supabase.from('products').select('*').lt('stock_quantity', 10).limit(5),
+        supabase
+          .from('products')
+          .select('id, name, stock_quantity')
+          .lt('stock_quantity', 10)
+          .limit(5),
+        supabase
+          .from('order_items')
+          .select('product_id, quantity, products(id, name, sku)'),
       ]);
 
       if (productsRes.error) throw productsRes.error;
       if (ordersRes.error) throw ordersRes.error;
+      if (orderItemsRes.error) throw orderItemsRes.error;
 
       const productCount = productsRes.count || 0;
       const orders = ordersRes.data || [];
       const lowStockItems = lowStockRes.data || [];
+      const orderItems = orderItemsRes.data || [];
+
       const revenue = orders.reduce((acc, o) => acc + Number(o.total_amount), 0);
       const orderCount = orders.length;
 
@@ -93,42 +118,48 @@ export function Dashboard() {
         totalRevenue: revenue,
         lowStock: lowStockItems.length,
         avgOrderValue: orderCount > 0 ? revenue / orderCount : 0,
-        revenueGrowth: 12.5,
-        orderGrowth: 8.2,
+        revenueGrowth: null,
+        orderGrowth: null,
       });
 
       setRecentOrders(orders.slice(0, 6));
-
-      const last7Days = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        return d.toISOString().split('T')[0];
-      }).reverse();
-
-      const dailyData = last7Days.map((date) => {
-        const dayOrders = orders.filter((o) => o.created_at.startsWith(date));
-        return {
-          date: new Date(date).toLocaleDateString(undefined, { weekday: 'short' }),
-          revenue: dayOrders.reduce((acc, o) => acc + Number(o.total_amount), 0),
-        };
-      });
-
-      setChartData(dailyData);
       setLowStockProducts(lowStockItems);
 
-      const { data: topProductsData } = await supabase
-        .from('products')
-        .select('*')
-        .limit(5);
-
-      if (topProductsData) {
-        setTopProducts(
-          topProductsData.map((p) => ({
-            ...p,
-            sales: Math.floor(Math.random() * 50) + 10,
-          }))
-        );
+      // Group all orders by month for chart
+      const monthMap: Record<string, number> = {};
+      for (const order of orders) {
+        const d = new Date(order.created_at);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        monthMap[key] = (monthMap[key] || 0) + Number(order.total_amount);
       }
+      const monthlyData = Object.entries(monthMap)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, rev]) => {
+          const [year, month] = key.split('-');
+          const label = new Date(Number(year), Number(month) - 1).toLocaleDateString(undefined, {
+            month: 'short',
+            year: '2-digit',
+          });
+          return { date: label, revenue: rev };
+        });
+      setChartData(monthlyData);
+
+      // Top products by units sold from order_items
+      const salesMap: Record<string, { name: string; sku: string; sales: number }> = {};
+      for (const item of orderItems) {
+        if (!item.product_id || !item.products) continue;
+        const p = item.products as any;
+        if (!salesMap[item.product_id]) {
+          salesMap[item.product_id] = { name: p.name, sku: p.sku || '—', sales: 0 };
+        }
+        salesMap[item.product_id].sales += item.quantity || 0;
+      }
+      const sorted = Object.entries(salesMap)
+        .sort((a, b) => b[1].sales - a[1].sales)
+        .slice(0, 5)
+        .map(([id, data]) => ({ id, ...data }));
+      setTopProducts(sorted);
+
     } catch (error: any) {
       toast.error('Data retrieval error');
     } finally {
@@ -148,6 +179,10 @@ export function Dashboard() {
   }
 
   const hasNoProducts = stats.totalProducts === 0;
+  const avgRevenue =
+    chartData.length > 0
+      ? chartData.reduce((acc, d) => acc + d.revenue, 0) / chartData.length
+      : 0;
 
   return (
     <ScrollArea className="h-full">
@@ -203,21 +238,19 @@ export function Dashboard() {
             <div className="grid grid-cols-2 lg:grid-cols-4 border border-border divide-x divide-y lg:divide-y-0 divide-border">
               <MetricCard
                 label="Revenue"
-                value={`$${stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                sub="Total earned"
-                growth={stats.revenueGrowth}
-                icon={DollarSign}
+                value={formatCurrency(stats.totalRevenue)}
+                sub="All time"
+                icon={TrendingUp}
               />
               <MetricCard
                 label="Orders"
                 value={stats.totalOrders.toLocaleString()}
-                sub="Transactions"
-                growth={stats.orderGrowth}
+                sub="All time"
                 icon={ShoppingCart}
               />
               <MetricCard
                 label="Avg Ticket"
-                value={`$${stats.avgOrderValue.toFixed(2)}`}
+                value={formatCurrency(stats.avgOrderValue)}
                 sub="Per order"
                 icon={Activity}
               />
@@ -238,18 +271,17 @@ export function Dashboard() {
                 <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                   <div>
                     <p className="text-sm font-black uppercase tracking-tight">Revenue Trend</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">7-day window</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">All time</p>
                   </div>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </div>
-                {/* Fixed height div — this is the parent ResponsiveContainer reads */}
                 <div className="px-4 pt-4 pb-4" style={{ height: 260 }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
                       <defs>
                         <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="80%" stopColor="hsl(var(--accent))" stopOpacity={0.15} />
-                          <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0} />
+                          <stop offset="10%" stopColor="hsl(var(--primary))" stopOpacity={0.18} />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid
@@ -267,7 +299,8 @@ export function Dashboard() {
                         axisLine={false}
                         tickLine={false}
                         tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                        width={48}
+                        width={52}
+                        tickFormatter={(v) => formatShort(v)}
                       />
                       <Tooltip
                         contentStyle={{
@@ -277,8 +310,24 @@ export function Dashboard() {
                           fontSize: 11,
                           fontWeight: 700,
                         }}
+                        formatter={(value: number) => [formatCurrency(value), 'Revenue']}
                         cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1 }}
                       />
+                      {avgRevenue > 0 && (
+                        <ReferenceLine
+                          y={avgRevenue}
+                          stroke="hsl(var(--muted-foreground))"
+                          strokeDasharray="4 4"
+                          strokeOpacity={0.5}
+                          label={{
+                            value: `Avg ${formatShort(avgRevenue)}`,
+                            fontSize: 9,
+                            fill: 'hsl(var(--muted-foreground))',
+                            position: 'insideTopRight',
+                            fontWeight: 700,
+                          }}
+                        />
+                      )}
                       <Area
                         type="monotone"
                         dataKey="revenue"
@@ -317,7 +366,7 @@ export function Dashboard() {
                             #{order.id.slice(0, 8)}
                           </p>
                           <p className="text-[10px] text-muted-foreground truncate">
-                            {order.profiles?.full_name || 'System'} ·{' '}
+                            {new Date(order.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} ·{' '}
                             {new Date(order.created_at).toLocaleTimeString([], {
                               hour: '2-digit',
                               minute: '2-digit',
@@ -326,7 +375,7 @@ export function Dashboard() {
                         </div>
                       </div>
                       <span className="text-xs font-black font-mono shrink-0 ml-2">
-                        ${Number(order.total_amount).toFixed(2)}
+                        {formatCurrency(Number(order.total_amount))}
                       </span>
                     </div>
                   ))}
@@ -345,33 +394,39 @@ export function Dashboard() {
               {/* Top products */}
               <div className="border border-border bg-card">
                 <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-                  <p className="text-sm font-black uppercase tracking-tight">Top Performance</p>
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-tight">Top Performance</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">By units sold</p>
+                  </div>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <div className="divide-y divide-border">
-                  {topProducts.map((product, idx) => (
-                    <div key={product.id} className="flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-colors">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-[10px] font-black text-muted-foreground/40 w-4 shrink-0">
-                          {String(idx + 1).padStart(2, '0')}
-                        </span>
-                        <div className="h-8 w-8 bg-muted border border-border flex items-center justify-center shrink-0">
-                          <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                {topProducts.length === 0 ? (
+                  <div className="flex items-center justify-center h-32 text-muted-foreground/30 text-xs uppercase tracking-widest">
+                    No sales data
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {topProducts.map((product, idx) => (
+                      <div key={product.id} className="flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="text-[10px] font-black text-muted-foreground/40 w-4 shrink-0">
+                            {String(idx + 1).padStart(2, '0')}
+                          </span>
+                          <div className="h-8 w-8 bg-muted border border-border flex items-center justify-center shrink-0">
+                            <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold uppercase truncate">{product.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{product.sku}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold uppercase truncate">{product.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{product.sku || '—'}</p>
+                        <div className="text-right shrink-0 ml-2">
+                          <p className="text-xs font-black font-mono">{product.sales} sold</p>
                         </div>
                       </div>
-                      <div className="text-right shrink-0 ml-2">
-                        <p className="text-xs font-black font-mono">{product.sales}</p>
-                        <p className="text-[10px] text-emerald-500 font-bold flex items-center justify-end gap-0.5">
-                          <ArrowUpRight className="h-2.5 w-2.5" />12%
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Low stock alerts */}
@@ -398,9 +453,6 @@ export function Dashboard() {
                             </p>
                           </div>
                         </div>
-                        <button className="shrink-0 ml-2 h-7 px-3 border border-orange-500/30 text-orange-500 text-[10px] font-black uppercase tracking-widest hover:bg-orange-500 hover:text-white transition-colors">
-                          Restock
-                        </button>
                       </div>
                     ))}
                   </div>
@@ -426,10 +478,12 @@ function MetricCard({
   label: string;
   value: string | number;
   sub?: string;
-  growth?: number;
+  growth?: number | null;
   icon: React.ElementType;
   alert?: boolean;
 }) {
+  const isPositive = growth !== null && growth !== undefined && growth >= 0;
+
   return (
     <div className={cn(
       'bg-card p-5 flex flex-col justify-between h-28',
@@ -446,9 +500,15 @@ function MetricCard({
           <span className={cn('text-2xl font-black font-mono tracking-tight leading-none', alert && 'text-orange-500')}>
             {value}
           </span>
-          {growth !== undefined && (
-            <span className="flex items-center gap-0.5 text-[10px] font-black text-emerald-500 mb-0.5">
-              <ArrowUpRight className="h-3 w-3" />{growth}%
+          {growth !== null && growth !== undefined && (
+            <span className={cn(
+              'flex items-center gap-0.5 text-[10px] font-black mb-0.5',
+              isPositive ? 'text-emerald-500' : 'text-red-500'
+            )}>
+              {isPositive
+                ? <ArrowUpRight className="h-3 w-3" />
+                : <ArrowDownRight className="h-3 w-3" />}
+              {Math.abs(growth)}%
             </span>
           )}
         </div>
