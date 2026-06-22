@@ -1,3 +1,4 @@
+// src/App.tsx
 import * as React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, hasSupabaseConfig } from '@/src/lib/supabase';
@@ -15,15 +16,16 @@ import { Users as UsersView } from './components/Users';
 import { Suppliers } from './components/Suppliers';
 import { Profile as ProfileView } from './components/Profile';
 import { Settings as SettingsView } from './components/Settings';
+import LandingPage from './Landing/LandingPage';
 import { Toaster } from '@/src/components/ui/sonner';
 import { Profile } from './types';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  History, 
-  LogOut, 
-  Menu, 
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  History,
+  LogOut,
+  Menu,
   X,
   Store,
   Settings,
@@ -51,13 +53,13 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') === 'dark' || 
+      return localStorage.getItem('theme') === 'dark' ||
         (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
     }
     return false;
   });
 
-  // Dark Mode Toggle
+  // ── Dark mode ──
   useEffect(() => {
     const root = window.document.documentElement;
     if (isDarkMode) {
@@ -69,7 +71,7 @@ export default function App() {
     }
   }, [isDarkMode]);
 
-  // Profile Fetching Logic
+  // ── Profile fetch ──
   const fetchProfile = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -77,7 +79,7 @@ export default function App() {
         .select('*')
         .eq('id', userId)
         .maybeSingle();
-      
+
       if (error) throw error;
 
       if (data && (data.is_approved || data.role === 'admin')) {
@@ -100,7 +102,7 @@ export default function App() {
               id: user.id,
               email: user.email,
               role: isFirstUser ? 'admin' : 'staff',
-              is_approved: isFirstUser ? true : false
+              is_approved: isFirstUser ? true : false,
             })
             .select()
             .single();
@@ -118,7 +120,7 @@ export default function App() {
     }
   }, [currentView]);
 
-  // Auth Listener
+  // ── Auth listener ──
   useEffect(() => {
     if (!hasSupabaseConfig) {
       setLoading(false);
@@ -142,23 +144,47 @@ export default function App() {
         setProfile(null);
         setLoading(false);
       }
-      
+
       if (event === 'SIGNED_OUT') {
         setCurrentView('dashboard');
+        // Return to landing on sign out
+        window.history.pushState({}, '', '/');
       }
     });
 
     return () => subscription.unsubscribe();
   }, [fetchProfile]);
 
+  // ── PUBLIC ROUTES — checked before any auth gate ──
+  const pathname = window.location.pathname;
+
+  // Landing page — always public, no auth needed
+  if (pathname === '/') {
+    // If already logged in, skip landing and go straight to app
+    if (session && !loading) {
+      window.history.pushState({}, '', '/app');
+    } else {
+      return (
+        <>
+          <LandingPage
+            onGetStarted={() => window.history.pushState({}, '', '/login')}
+          />
+          <Toaster position="top-right" />
+        </>
+      );
+    }
+  }
+
+  // ── Loading spinner ──
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
 
+  // ── Auth gate ──
   if (!session) {
     return (
       <>
@@ -168,6 +194,7 @@ export default function App() {
     );
   }
 
+  // ── Pending approval ──
   if (profile && !profile.is_approved && profile.role !== 'admin') {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background p-4">
@@ -177,10 +204,12 @@ export default function App() {
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-foreground">Account Pending Approval</h2>
-            <p className="text-muted-foreground">Your account has been created, but it requires approval from an administrator.</p>
+            <p className="text-muted-foreground">
+              Your account has been created, but it requires approval from an administrator.
+            </p>
           </div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full rounded-sm"
             onClick={() => supabase.auth.signOut()}
           >
@@ -192,54 +221,55 @@ export default function App() {
     );
   }
 
+  // ── Nav items ──
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
-    { id: 'pos', label: 'Register', icon: ShoppingCart, roles: ['admin', 'staff'] },
-    { id: 'orders', label: 'Orders', icon: ClipboardList, roles: ['admin', 'staff'] },
-    { id: 'inventory', label: 'Inventory', icon: Package, roles: ['admin', 'staff'] },
-    { id: 'categories', label: 'Categories', icon: Tag, roles: ['admin', 'staff'] },
-    { id: 'customers', label: 'Customers', icon: Users, roles: ['admin', 'staff'] },
-    { id: 'reports', label: 'Reports', icon: BarChart3, roles: ['admin'] },
-    { id: 'audit_logs', label: 'Audit Logs', icon: ShieldCheck, roles: ['admin'] },
-    { id: 'transactions', label: 'Transactions', icon: History, roles: ['admin'] },
-    { id: 'suppliers', label: 'Suppliers', icon: Truck, roles: ['admin'] },
-    { id: 'users', label: 'Employees', icon: UserPlus, roles: ['admin'] },
-    { id: 'profile', label: 'My Account', icon: UserCircle, roles: ['admin', 'staff'] },
-    { id: 'settings', label: 'Settings', icon: Settings, roles: ['admin', 'staff'] },
+    { id: 'dashboard',  label: 'Dashboard',  icon: LayoutDashboard, roles: ['admin'] },
+    { id: 'pos',        label: 'Register',   icon: ShoppingCart,    roles: ['admin', 'staff'] },
+    { id: 'orders',     label: 'Orders',     icon: ClipboardList,   roles: ['admin', 'staff'] },
+    { id: 'inventory',  label: 'Inventory',  icon: Package,         roles: ['admin'] },
+    { id: 'categories', label: 'Categories', icon: Tag,             roles: ['admin'] },
+    { id: 'customers',  label: 'Customers',  icon: Users,           roles: ['admin', 'staff'] },
+    { id: 'reports',    label: 'Reports',    icon: BarChart3,       roles: ['admin'] },
+    { id: 'audit_logs', label: 'Audit Logs', icon: ShieldCheck,     roles: ['admin'] },
+    { id: 'transactions', label: 'Transactions', icon: History,     roles: ['admin'] },
+    { id: 'suppliers',  label: 'Suppliers',  icon: Truck,           roles: ['admin'] },
+    { id: 'users',      label: 'Employees',  icon: UserPlus,        roles: ['admin'] },
+    { id: 'profile',    label: 'My Account', icon: UserCircle,      roles: ['admin', 'staff'] },
+    { id: 'settings',   label: 'Settings',   icon: Settings,        roles: ['admin', 'staff'] },
   ];
 
-  const filteredNavItems = navItems.filter(item => 
+  const filteredNavItems = navItems.filter(item =>
     !profile || item.roles.includes(profile.role)
   );
 
   const renderView = () => {
     switch (currentView) {
-      case 'dashboard': return <Dashboard />;
-      case 'inventory': return <Inventory />;
-      case 'pos': return <POS />;
-      case 'orders': return <Orders userRole={profile?.role} />;
-      case 'categories': return <Categories />;
-      case 'audit_logs': return <AuditLogs />;
+      case 'dashboard':    return <Dashboard />;
+      case 'inventory':    return <Inventory />;
+      case 'pos':          return <POS />;
+      case 'orders':       return <Orders userRole={profile?.role} />;
+      case 'categories':   return <Categories />;
+      case 'audit_logs':   return <AuditLogs />;
       case 'transactions': return <Transactions />;
-      case 'customers': return <Customers />;
-      case 'reports': return <Reports />;
-      case 'suppliers': return <Suppliers />;
-      case 'users': return <UsersView />;
-      case 'profile': return <ProfileView />;
-      case 'settings': return <SettingsView />;
-      default: return <Dashboard />;
+      case 'customers':    return <Customers />;
+      case 'reports':      return <Reports />;
+      case 'suppliers':    return <Suppliers />;
+      case 'users':        return <UsersView />;
+      case 'profile':      return <ProfileView />;
+      case 'settings':     return <SettingsView />;
+      default:             return <Dashboard />;
     }
   };
 
-  // Whether the current view should fill the full content area (no padding/max-width)
   const isFullBleedView = currentView === 'pos';
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
+
       {/* ── SIDEBAR ── */}
       <aside className={cn(
-        "bg-card border-r transition-all duration-300 flex flex-col",
-        isSidebarOpen ? "w-64" : "w-20"
+        'bg-card border-r transition-all duration-300 flex flex-col',
+        isSidebarOpen ? 'w-64' : 'w-20'
       )}>
         <div className="p-6 flex items-center space-x-3">
           <div className="bg-primary p-2 rounded-sm">
@@ -249,39 +279,35 @@ export default function App() {
         </div>
 
         <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
-          {filteredNavItems.map((item) => (
+          {filteredNavItems.map(item => (
             <Button
               key={item.id}
-              variant={currentView === item.id ? "secondary" : "ghost"}
+              variant={currentView === item.id ? 'secondary' : 'ghost'}
               className={cn(
-                "w-full justify-start h-12",
-                currentView === item.id ? "bg-primary/10 text-primary hover:bg-primary/20" : ""
+                'w-full justify-start h-12',
+                currentView === item.id ? 'bg-primary/10 text-primary hover:bg-primary/20' : ''
               )}
               onClick={() => setCurrentView(item.id as View)}
-              onKeyUp={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  setCurrentView(item.id as View);
-                }
+              onKeyUp={e => {
+                if (e.key === 'Enter' || e.key === ' ') setCurrentView(item.id as View);
               }}
             >
-              <item.icon className={cn("h-5 w-5", isSidebarOpen ? "mr-3" : "mx-auto")} />
+              <item.icon className={cn('h-5 w-5', isSidebarOpen ? 'mr-3' : 'mx-auto')} />
               {isSidebarOpen && <span>{item.label}</span>}
             </Button>
           ))}
         </nav>
 
         <div className="p-4 border-t">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="w-full justify-start text-muted-foreground hover:text-destructive"
             onClick={() => supabase.auth.signOut()}
-            onKeyUp={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                supabase.auth.signOut();
-              }
+            onKeyUp={e => {
+              if (e.key === 'Enter' || e.key === ' ') supabase.auth.signOut();
             }}
           >
-            <LogOut className={cn("h-5 w-5", isSidebarOpen ? "mr-3" : "mx-auto")} />
+            <LogOut className={cn('h-5 w-5', isSidebarOpen ? 'mr-3' : 'mx-auto')} />
             {isSidebarOpen && <span>Logout</span>}
           </Button>
         </div>
@@ -289,24 +315,23 @@ export default function App() {
 
       {/* ── MAIN ── */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header */}
         <header className="h-16 bg-card border-b flex items-center justify-between px-8 shrink-0">
           <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              onKeyUp={(e) => {
+              onKeyUp={e => {
                 if (e.key === 'Enter' || e.key === ' ') setIsSidebarOpen(prev => !prev);
               }}
             >
               {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsDarkMode(!isDarkMode)}
-              onKeyUp={(e) => {
+              onKeyUp={e => {
                 if (e.key === 'Enter' || e.key === ' ') setIsDarkMode(prev => !prev);
               }}
               className="text-muted-foreground"
@@ -314,12 +339,12 @@ export default function App() {
               {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             <div
               className="text-right hidden sm:block cursor-pointer"
               onClick={() => setCurrentView('profile')}
-              onKeyUp={(e) => {
+              onKeyUp={e => {
                 if (e.key === 'Enter' || e.key === ' ') setCurrentView('profile');
               }}
               role="button"
@@ -328,16 +353,14 @@ export default function App() {
               <p className="text-sm font-bold text-foreground">
                 {profile?.full_name || session?.user?.email?.split('@')[0]}
               </p>
-              <div className="flex items-center justify-end space-x-1.5">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  {profile?.role === 'admin' ? 'Administrator' : 'Staff Member'}
-                </p>
-              </div>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                {profile?.role === 'admin' ? 'Administrator' : 'Staff Member'}
+              </p>
             </div>
-            <div 
+            <div
               className="h-10 w-10 rounded-sm bg-primary/10 flex items-center justify-center text-primary font-bold cursor-pointer border border-primary/20"
               onClick={() => setCurrentView('profile')}
-              onKeyUp={(e) => {
+              onKeyUp={e => {
                 if (e.key === 'Enter' || e.key === ' ') setCurrentView('profile');
               }}
               role="button"
@@ -348,7 +371,6 @@ export default function App() {
           </div>
         </header>
 
-        {/* Content area — full-bleed for POS, padded for everything else */}
         {isFullBleedView ? (
           <div className="flex-1 overflow-hidden bg-background">
             {renderView()}
