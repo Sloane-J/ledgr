@@ -16,6 +16,7 @@ import { Users as UsersView } from './components/Users';
 import { Suppliers } from './components/Suppliers';
 import { Profile as ProfileView } from './components/Profile';
 import { Settings as SettingsView } from './components/Settings';
+import { Sidebar } from './components/Sidebar';
 import LandingPage from './Landing/LandingPage';
 import { Toaster } from '@/src/components/ui/sonner';
 import { Profile } from './types';
@@ -27,7 +28,6 @@ import {
   LogOut,
   Menu,
   X,
-  Store,
   Settings,
   Sun,
   Moon,
@@ -38,12 +38,31 @@ import {
   UserCircle,
   Truck,
   ClipboardList,
-  Tag
+  Tag,
 } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
 import { cn } from '@/lib/utils';
 
-type View = 'dashboard' | 'inventory' | 'pos' | 'transactions' | 'customers' | 'reports' | 'settings' | 'users' | 'profile' | 'suppliers' | 'orders' | 'audit_logs' | 'categories';
+type View =
+  | 'dashboard' | 'inventory' | 'pos' | 'transactions'
+  | 'customers' | 'reports' | 'settings' | 'users'
+  | 'profile' | 'suppliers' | 'orders' | 'audit_logs' | 'categories';
+
+const NAV_ITEMS = [
+  { id: 'dashboard',    label: 'Dashboard',    icon: LayoutDashboard, roles: ['admin'] },
+  { id: 'pos',          label: 'Register',     icon: ShoppingCart,    roles: ['admin', 'staff'] },
+  { id: 'orders',       label: 'Orders',       icon: ClipboardList,   roles: ['admin', 'staff'] },
+  { id: 'inventory',    label: 'Inventory',    icon: Package,         roles: ['admin'] },
+  { id: 'categories',   label: 'Categories',   icon: Tag,             roles: ['admin'] },
+  { id: 'customers',    label: 'Customers',    icon: Users,           roles: ['admin', 'staff'] },
+  { id: 'reports',      label: 'Reports',      icon: BarChart3,       roles: ['admin'] },
+  { id: 'audit_logs',   label: 'Audit Logs',   icon: ShieldCheck,     roles: ['admin'] },
+  { id: 'transactions', label: 'Transactions', icon: History,         roles: ['admin'] },
+  { id: 'suppliers',    label: 'Suppliers',    icon: Truck,           roles: ['admin'] },
+  { id: 'users',        label: 'Employees',    icon: UserPlus,        roles: ['admin'] },
+  { id: 'profile',      label: 'My Account',   icon: UserCircle,      roles: ['admin', 'staff'] },
+  { id: 'settings',     label: 'Settings',     icon: Settings,        roles: ['admin', 'staff'] },
+];
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -54,7 +73,8 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark' ||
-        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        (!localStorage.getItem('theme') &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches);
     }
     return false;
   });
@@ -84,7 +104,10 @@ export default function App() {
 
       if (data && (data.is_approved || data.role === 'admin')) {
         setProfile(data);
-        if (data.role === 'staff' && ['dashboard', 'reports', 'transactions', 'users', 'audit_logs'].includes(currentView)) {
+        if (
+          data.role === 'staff' &&
+          ['dashboard', 'reports', 'transactions', 'users', 'audit_logs'].includes(currentView)
+        ) {
           setCurrentView('pos');
         }
       } else if (!data) {
@@ -136,46 +159,44 @@ export default function App() {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
-        setLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        if (session?.user) {
+          fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+          setLoading(false);
+        }
+        if (event === 'SIGNED_OUT') {
+          setCurrentView('dashboard');
+          window.history.pushState({}, '', '/');
+        }
       }
-
-      if (event === 'SIGNED_OUT') {
-        setCurrentView('dashboard');
-        // Return to landing on sign out
-        window.history.pushState({}, '', '/');
-      }
-    });
+    );
 
     return () => subscription.unsubscribe();
   }, [fetchProfile]);
 
-  // ── PUBLIC ROUTES — checked before any auth gate ──
+  // ── PUBLIC ROUTES ──
   const pathname = window.location.pathname;
 
-  // Landing page — always public, no auth needed
   if (pathname === '/') {
-    // If already logged in, skip landing and go straight to app
     if (session && !loading) {
-      window.history.pushState({}, '', '/app');
-    } else {
-      return (
-        <>
-          <LandingPage
-            onGetStarted={() => window.history.pushState({}, '', '/login')}
-          />
-          <Toaster position="top-right" />
-        </>
-      );
+      window.location.href = '/app';
+      return null;
     }
+    return (
+      <>
+        <LandingPage
+          onGetStarted={() => { window.location.href = '/login'; }}
+        />
+        <Toaster position="top-right" />
+      </>
+    );
   }
 
-  // ── Loading spinner ──
+  // ── Loading ──
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -203,9 +224,11 @@ export default function App() {
             <ShieldCheck className="h-8 w-8 text-orange-500" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-foreground">Account Pending Approval</h2>
+            <h2 className="text-2xl font-bold text-foreground">
+              Account Pending Approval
+            </h2>
             <p className="text-muted-foreground">
-              Your account has been created, but it requires approval from an administrator.
+              Your account has been created but requires administrator approval.
             </p>
           </div>
           <Button
@@ -221,27 +244,7 @@ export default function App() {
     );
   }
 
-  // ── Nav items ──
-  const navItems = [
-    { id: 'dashboard',  label: 'Dashboard',  icon: LayoutDashboard, roles: ['admin'] },
-    { id: 'pos',        label: 'Register',   icon: ShoppingCart,    roles: ['admin', 'staff'] },
-    { id: 'orders',     label: 'Orders',     icon: ClipboardList,   roles: ['admin', 'staff'] },
-    { id: 'inventory',  label: 'Inventory',  icon: Package,         roles: ['admin'] },
-    { id: 'categories', label: 'Categories', icon: Tag,             roles: ['admin'] },
-    { id: 'customers',  label: 'Customers',  icon: Users,           roles: ['admin', 'staff'] },
-    { id: 'reports',    label: 'Reports',    icon: BarChart3,       roles: ['admin'] },
-    { id: 'audit_logs', label: 'Audit Logs', icon: ShieldCheck,     roles: ['admin'] },
-    { id: 'transactions', label: 'Transactions', icon: History,     roles: ['admin'] },
-    { id: 'suppliers',  label: 'Suppliers',  icon: Truck,           roles: ['admin'] },
-    { id: 'users',      label: 'Employees',  icon: UserPlus,        roles: ['admin'] },
-    { id: 'profile',    label: 'My Account', icon: UserCircle,      roles: ['admin', 'staff'] },
-    { id: 'settings',   label: 'Settings',   icon: Settings,        roles: ['admin', 'staff'] },
-  ];
-
-  const filteredNavItems = navItems.filter(item =>
-    !profile || item.roles.includes(profile.role)
-  );
-
+  // ── View renderer ──
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':    return <Dashboard />;
@@ -267,80 +270,54 @@ export default function App() {
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
 
       {/* ── SIDEBAR ── */}
-      <aside className={cn(
-        'bg-card border-r transition-all duration-300 flex flex-col',
-        isSidebarOpen ? 'w-64' : 'w-20'
-      )}>
-        <div className="p-6 flex items-center space-x-3">
-          <div className="bg-primary p-2 rounded-sm">
-            <Store className="h-6 w-6 text-primary-foreground" />
-          </div>
-          {isSidebarOpen && <span className="font-bold text-xl tracking-tight">Ledgr</span>}
-        </div>
-
-        <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
-          {filteredNavItems.map(item => (
-            <Button
-              key={item.id}
-              variant={currentView === item.id ? 'secondary' : 'ghost'}
-              className={cn(
-                'w-full justify-start h-12',
-                currentView === item.id ? 'bg-primary/10 text-primary hover:bg-primary/20' : ''
-              )}
-              onClick={() => setCurrentView(item.id as View)}
-              onKeyUp={e => {
-                if (e.key === 'Enter' || e.key === ' ') setCurrentView(item.id as View);
-              }}
-            >
-              <item.icon className={cn('h-5 w-5', isSidebarOpen ? 'mr-3' : 'mx-auto')} />
-              {isSidebarOpen && <span>{item.label}</span>}
-            </Button>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-muted-foreground hover:text-destructive"
-            onClick={() => supabase.auth.signOut()}
-            onKeyUp={e => {
-              if (e.key === 'Enter' || e.key === ' ') supabase.auth.signOut();
-            }}
-          >
-            <LogOut className={cn('h-5 w-5', isSidebarOpen ? 'mr-3' : 'mx-auto')} />
-            {isSidebarOpen && <span>Logout</span>}
-          </Button>
-        </div>
-      </aside>
+      <Sidebar
+        isOpen={isSidebarOpen}
+        currentView={currentView}
+        onViewChange={view => setCurrentView(view as View)}
+        navItems={NAV_ITEMS}
+        profile={profile}
+      />
 
       {/* ── MAIN ── */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 bg-card border-b flex items-center justify-between px-8 shrink-0">
-          <div className="flex items-center space-x-4">
+
+        {/* Header */}
+        <header className="h-16 bg-card border-b flex items-center justify-between px-6 shrink-0">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               onKeyUp={e => {
-                if (e.key === 'Enter' || e.key === ' ') setIsSidebarOpen(prev => !prev);
+                if (e.key === 'Enter' || e.key === ' ')
+                  setIsSidebarOpen(prev => !prev);
               }}
+              title={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
             >
-              {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {isSidebarOpen
+                ? <X className="h-5 w-5" />
+                : <Menu className="h-5 w-5" />
+              }
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsDarkMode(!isDarkMode)}
               onKeyUp={e => {
-                if (e.key === 'Enter' || e.key === ' ') setIsDarkMode(prev => !prev);
+                if (e.key === 'Enter' || e.key === ' ')
+                  setIsDarkMode(prev => !prev);
               }}
               className="text-muted-foreground"
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              {isDarkMode
+                ? <Sun className="h-5 w-5" />
+                : <Moon className="h-5 w-5" />
+              }
             </Button>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-3">
             <div
               className="text-right hidden sm:block cursor-pointer"
               onClick={() => setCurrentView('profile')}
@@ -358,19 +335,25 @@ export default function App() {
               </p>
             </div>
             <div
-              className="h-10 w-10 rounded-sm bg-primary/10 flex items-center justify-center text-primary font-bold cursor-pointer border border-primary/20"
+              className="h-10 w-10 rounded-sm bg-primary/10 flex items-center justify-center text-primary font-bold cursor-pointer border border-primary/20 hover:bg-primary/20 transition-colors"
               onClick={() => setCurrentView('profile')}
               onKeyUp={e => {
                 if (e.key === 'Enter' || e.key === ' ') setCurrentView('profile');
               }}
               role="button"
               tabIndex={0}
+              title="My Account"
             >
-              {(profile?.full_name?.[0] || session?.user?.email?.[0] || 'U').toUpperCase()}
+              {(
+                profile?.full_name?.[0] ||
+                session?.user?.email?.[0] ||
+                'U'
+              ).toUpperCase()}
             </div>
           </div>
         </header>
 
+        {/* Content */}
         {isFullBleedView ? (
           <div className="flex-1 overflow-hidden bg-background">
             {renderView()}

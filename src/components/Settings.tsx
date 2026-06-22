@@ -30,13 +30,13 @@ import { supabase } from '@/src/lib/supabase';
 
 export function Settings() {
   const [storeInfo, setStoreInfo] = useState({
-    name: 'StockMaster POS',
-    address: '123 Business Ave, Suite 100',
+    name: 'Ledgr POS',
+    address: '123 Business Ave, Suite 100, Accra',
     phone: '+233 24 000 0000',
-    email: 'contact@stockmaster.com',
-    website: 'www.stockmaster.com',
+    email: 'contact@ledgrpos.com',
+    website: 'https://ledgr-xi.vercel.app/',
     taxRate: '8',
-    currency: 'USD'
+    currency: 'GHC'
   });
   const [isExporting, setIsExporting] = useState(false);
 
