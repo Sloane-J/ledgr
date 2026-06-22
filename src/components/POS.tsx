@@ -270,13 +270,14 @@ export function POS() {
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert([{
-          user_id: user.id,
-          customer_id: finalCustomerId,
-          customer_name: finalCustomerName || 'Guest',
-          total_amount: total,
-          status: 'completed',
-          created_at: new Date().toISOString(),
-        }])
+  user_id: user.id,
+  customer_id: finalCustomerId,
+  customer_name: finalCustomerName || 'Guest',
+  total_amount: total,
+  status: 'completed',
+  payment_method: paymentMethod,
+  created_at: new Date().toISOString(),
+}])
         .select()
         .single();
       if (orderError) throw orderError;

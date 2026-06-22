@@ -217,7 +217,7 @@ export default function App() {
       case 'dashboard': return <Dashboard />;
       case 'inventory': return <Inventory />;
       case 'pos': return <POS />;
-      case 'orders': return <Orders />;
+      case 'orders': return <Orders userRole={profile?.role} />;
       case 'categories': return <Categories />;
       case 'audit_logs': return <AuditLogs />;
       case 'transactions': return <Transactions />;

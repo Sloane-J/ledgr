@@ -17,7 +17,11 @@ import { ReceiptPrint } from '@/src/components/ReceiptPrint';
 
 type OrderWithItems = Order & { order_items: any[]; profiles?: any };
 
-export function Orders() {
+interface OrdersProps {
+  userRole?: string;
+}
+
+export function Orders({ userRole }: OrdersProps) {
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -163,11 +167,12 @@ export function Orders() {
           </div>
         ) : (
           <OrderTable
-            orders={filteredOrders}
-            onRefund={order => { setSelectedOrder(order); setIsRefundDialogOpen(true); }}
-            onVoid={order => { setSelectedOrder(order); setIsVoidDialogOpen(true); }}
-            onReprint={handleReprint}
-          />
+  orders={filteredOrders}
+  userRole={userRole}
+  onRefund={order => { setSelectedOrder(order); setIsRefundDialogOpen(true); }}
+  onVoid={order => { setSelectedOrder(order); setIsVoidDialogOpen(true); }}
+  onReprint={handleReprint}
+/>
         )}
       </div>
 
