@@ -1,14 +1,14 @@
 // src/components/inventory/InventoryFilters.tsx
 import * as React from 'react';
 import { Search, LayoutGrid, List } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/src/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/src/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Category } from '@/src/types';
 

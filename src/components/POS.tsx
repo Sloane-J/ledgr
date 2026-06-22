@@ -3,9 +3,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/src/lib/supabase';
 import { Product, Category, CartItem, HeldOrder } from '@/src/types';
 import { CURRENCY_SYMBOL, TAX_RATE, LOW_STOCK_THRESHOLD, formatCurrency } from '@/src/lib/constants';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { ScrollArea } from '@/src/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import {
   ArrowLeft,
@@ -36,9 +36,9 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from '@/components/ui/dialog';
+} from '@/src/components/ui/dialog';
 
-import { Label } from '@/components/ui/label';
+import { Label } from '@/src/components/ui/label';
 import { ReceiptPrint } from './ReceiptPrint';
 
 

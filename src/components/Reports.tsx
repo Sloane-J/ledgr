@@ -29,8 +29,8 @@ import {
   DollarSign,
   ReceiptText,
 } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/src/components/ui/scroll-area';
+import { Input } from '@/src/components/ui/input';
 import { cn } from '@/lib/utils';
 import {
   format,

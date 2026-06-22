@@ -2,8 +2,8 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/src/lib/supabase';
 import { Supplier, SupplierOrder, SupplierOrderItem, Product } from '@/src/types';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/src/components/ui/input';
+import { ScrollArea } from '@/src/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from '@/components/ui/dialog';
+} from '@/src/components/ui/dialog';
 import {
   ArrowRight,
   CheckCircle2,

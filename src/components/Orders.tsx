@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/src/lib/supabase';
 import { Order } from '@/src/types';
 import { formatCurrency } from '@/src/lib/constants';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/src/components/ui/scroll-area';
 import { OrderStatsStrip } from '@/src/components/orders/OrderStatsStrip';
 import { OrderFilters } from '@/src/components/orders/OrderFilters';
 import { OrderTable } from '@/src/components/orders/OrderTable';

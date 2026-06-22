@@ -12,9 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+} from '@/src/components/ui/dialog';
+import { Label } from '@/src/components/ui/label';
+import { Input } from '@/src/components/ui/input';
 
 interface VoidDialogProps {
   order: Order & { order_items: any[] };

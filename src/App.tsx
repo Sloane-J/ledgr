@@ -15,7 +15,7 @@ import { Users as UsersView } from './components/Users';
 import { Suppliers } from './components/Suppliers';
 import { Profile as ProfileView } from './components/Profile';
 import { Settings as SettingsView } from './components/Settings';
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@/src/components/ui/sonner';
 import { Profile } from './types';
 import { 
   LayoutDashboard, 
@@ -38,7 +38,7 @@ import {
   ClipboardList,
   Tag
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/src/components/ui/button';
 import { cn } from '@/lib/utils';
 
 type View = 'dashboard' | 'inventory' | 'pos' | 'transactions' | 'customers' | 'reports' | 'settings' | 'users' | 'profile' | 'suppliers' | 'orders' | 'audit_logs' | 'categories';

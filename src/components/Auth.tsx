@@ -12,14 +12,14 @@ import { AnimatePresence, motion } from "motion/react";
 import type * as React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/src/components/ui/select";
 import { hasSupabaseConfig, supabase } from "@/src/lib/supabase";
 import { cn } from "@/lib/utils";
 
@@ -228,7 +228,7 @@ export function Auth() {
                         </label>
                         <Select value={email} onValueChange={setEmail}>
                           <SelectTrigger className="h-11 border-border bg-background text-sm">
-                            <SelectValue placeholder="Choose an employee…" />
+                            <SelectValue placeholder="select an account…" />
                           </SelectTrigger>
                           <SelectContent>
                             {users.map(u => (

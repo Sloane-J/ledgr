@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
+import { Separator } from '@/src/components/ui/separator';
 import { 
   Store, 
   MapPin, 
@@ -24,7 +24,7 @@ import {
   Package,
   ShoppingCart
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/src/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/src/lib/supabase';
 

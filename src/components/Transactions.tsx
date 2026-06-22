@@ -2,14 +2,14 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/src/lib/supabase';
 import { Order } from '@/src/types';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table';
+import { Badge } from '@/src/components/ui/badge';
 import { format } from 'date-fns';
 import { ShoppingBag, Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/src/components/ui/input';
 import { toast } from 'sonner';
 
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/src/components/ui/scroll-area';
 
 export function Transactions() {
   const [orders, setOrders] = useState<Order[]>([]);

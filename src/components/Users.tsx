@@ -14,8 +14,8 @@ import {
   UserPlus,
   XCircle,
 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/src/components/ui/input';
+import { ScrollArea } from '@/src/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from '@/components/ui/dialog';
+} from '@/src/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 

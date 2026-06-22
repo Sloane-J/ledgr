@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/src/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
 import { 
   Table, 
   TableBody, 
@@ -10,7 +10,7 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from '@/components/ui/table';
+} from '@/src/components/ui/table';
 import { 
   Dialog, 
   DialogContent, 
@@ -19,8 +19,8 @@ import {
   DialogTrigger, 
   DialogFooter,
   DialogDescription
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+} from '@/src/components/ui/dialog';
+import { Badge } from '@/src/components/ui/badge';
 import { 
   Plus, 
   Search, 

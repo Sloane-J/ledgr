@@ -1,7 +1,7 @@
 // components/orders/OrderFilters.tsx
 import * as React from 'react';
 import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/src/components/ui/input';
 import { cn } from '@/lib/utils';
 
 const STATUS_FILTERS = ['all', 'completed', 'refunded', 'voided'] as const;

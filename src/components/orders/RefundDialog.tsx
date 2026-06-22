@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from '@/src/components/ui/dialog';
 
 interface RefundDialogProps {
   order: Order & { order_items: any[] };

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /inventory
+Disallow: /settings
+
+Sitemap: https://ledgr-xi.vercel.app/sitemap.xml

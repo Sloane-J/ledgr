@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/src/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogDescription
-} from '@/components/ui/dialog';
+} from '@/src/components/ui/dialog';
 import { 
   Plus, 
   Search, 
