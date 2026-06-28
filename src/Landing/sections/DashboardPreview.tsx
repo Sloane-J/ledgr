@@ -307,7 +307,7 @@ export default function DashboardPreview() {
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.38 + i * 0.08 }}
                 className="rounded-xl border border-white/10 bg-white/5 px-5 py-4 flex gap-4 items-start"
               >
-                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mt-0.5">
+                <div className="shrink-0 w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mt-0.5">
                   <Icon className="w-4 h-4 text-white/70" aria-hidden="true" />
                 </div>
                 <div>

@@ -46,7 +46,7 @@ export default function CTA() {
 
           {/* Icon mark using full neutral dark block */}
           <div
-            className="flex-shrink-0 w-12 h-12 rounded-xl bg-neutral-900 flex items-center justify-center mb-6"
+            className="shrink-0 w-12 h-12 rounded-xl bg-neutral-900 flex items-center justify-center mb-6"
             aria-hidden="true"
           >
             <Zap className="w-5 h-5 text-white" fill="white" aria-hidden="true" />

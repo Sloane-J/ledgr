@@ -1,21 +1,21 @@
 import { useEffect } from "react";
-import Navbar from "./sections/Navbar";
-import Hero from "./sections/Hero";
-import Stats from "./sections/Stats";
-import Features from "./sections/Features";
-import DashboardPreview from "./sections/DashboardPreview";
-import HowItWorks from "./sections/HowItWorks";
-import Security from "./sections/Security";
 import CTA from "./sections/CTA";
+import DashboardPreview from "./sections/DashboardPreview";
+import Features from "./sections/Features";
 import Footer from "./sections/Footer";
+import Hero from "./sections/Hero";
+import HowItWorks from "./sections/HowItWorks";
+import Navbar from "./sections/Navbar";
+import Security from "./sections/Security";
+import Stats from "./sections/Stats";
 
 // ─── SEO meta injection ───────────────────────────────────────────────────────
 
 const SEO_TITLE = "Ledgr POS & Inventory Management — Built for Retail";
 const SEO_DESCRIPTION =
   "A modern, full-stack Point of Sale and Inventory Management solution built for speed and reliability. Manage sales, track stock, and monitor staff in real time.";
-const SEO_URL = "https://ledgr-xi.vercel.app/"; 
-const SEO_IMAGE = "https://ledgr-xi.vercel.app//og-image.png"; 
+const SEO_URL = "https://ledgr-xi.vercel.app/";
+const SEO_IMAGE = "https://ledgr-xi.vercel.app//og-image.png";
 
 function useSEO() {
   useEffect(() => {
@@ -78,7 +78,7 @@ function useSEO() {
     schema.textContent = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "POS & Inventory Management System",
+      name: "Ledgr POS & Inventory Management System",
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description: SEO_DESCRIPTION,
@@ -86,7 +86,7 @@ function useSEO() {
       offers: {
         "@type": "Offer",
         price: "0",
-        priceCurrency: "USD",
+        priceCurrency: "GHC",
       },
       featureList: [
         "Point of Sale register",
@@ -121,7 +121,6 @@ function useFontLoader() {
     document.head.appendChild(preconnect2);
 
     // Inter — weights used across the landing page:
-    // 400 body, 500 labels/medium, 600 headings/semibold
     const link = document.createElement("link");
     link.id = linkId;
     link.rel = "stylesheet";
@@ -150,7 +149,7 @@ export default function LandingPage() {
       {/* Skip to main content — accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[var(--clr-primary-a0)] focus:text-white focus:text-sm focus:font-medium focus:outline-none"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-9999 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-clr-primary-a0) focus:text-white focus:text-sm focus:font-medium focus:outline-none"
       >
         Skip to main content
       </a>
