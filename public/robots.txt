@@ -1,9 +1,14 @@
 User-agent: *
 Allow: /
-
-Disallow: /auth
 Disallow: /dashboard
+Disallow: /pos
 Disallow: /inventory
+Disallow: /orders
+Disallow: /customers
+Disallow: /reports
 Disallow: /settings
+Disallow: /users
+Disallow: /audit
+Disallow: /suppliers
 
-Sitemap: https://ledgr-xi.vercel.app/sitemap.xml
+Sitemap: https://ledgr-xi.vercel.app//sitemap.xml
