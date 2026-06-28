@@ -1,108 +1,156 @@
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X, ShieldCheck } from "lucide-react";
+
+interface NavLink {
+  label: string;
+  href: string;
+}
+
+const NAV_LINKS: NavLink[] = [
+  { label: "Features", href: "#features" },
+  { label: "How It Works", href: "#how-it-works" },
+  { label: "Benefits", href: "#benefits" },
+  { label: "Security", href: "#security" },
+];
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handler)
-    return () => window.removeEventListener('scroll', handler)
-  }, [])
+    const handleScroll = () => setIsScrolled(window.scrollY > 12);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  const links = ['Features', 'How it works', 'Security']
+  // Lock body scroll when mobile menu open
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
   return (
-    <motion.nav
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-[#0B0F14]/95 backdrop-blur-md border-b border-white/5' : 'bg-transparent'
-      }`}
-    >
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-[#2ECC8F] rounded-md flex items-center justify-center">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="7" width="4" height="6" fill="#0B0F14" rx="0.5" />
-              <rect x="5" y="4" width="4" height="9" fill="#0B0F14" rx="0.5" />
-              <rect x="9" y="1" width="4" height="12" fill="#0B0F14" rx="0.5" />
-            </svg>
-          </div>
-          <span className="text-white font-semibold tracking-tight text-[15px]">Ledgr POS</span>
-        </div>
-
-        {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-8">
-          {links.map(link => (
-            <a
-              key={link}
-              href={`#${link.toLowerCase().replace(/\s+/g, '-')}`}
-              className="text-[#B8C7D9] hover:text-white text-sm transition-colors"
-            >
-              {link}
-            </a>
-          ))}
-          <a href="#" className="text-[#B8C7D9] hover:text-white text-sm transition-colors">Login</a>
-        </div>
-
-        {/* CTA */}
-        <div className="hidden md:flex items-center gap-3">
-          <a
-            href="#"
-            className="text-sm px-4 py-2 rounded-md bg-[#2ECC8F] text-[#0B0F14] font-semibold hover:bg-[#25b87e] transition-colors"
-          >
-            Start free trial
-          </a>
-        </div>
-
-        {/* Mobile menu button */}
-        <button
-          className="md:hidden text-white p-1"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
+    <>
+      <motion.header
+        initial={{ y: -16, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+          isScrolled
+            ? "bg-white/90 backdrop-blur-md border-b border-neutral-200/60 shadow-sm"
+            : "bg-transparent"
+        }`}
+      >
+        <nav
+          className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between"
+          aria-label="Main navigation"
         >
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5">
-            {menuOpen ? (
-              <>
-                <line x1="4" y1="4" x2="18" y2="18" />
-                <line x1="18" y1="4" x2="4" y2="18" />
-              </>
+          {/* Logo */}
+          <a
+            href="/"
+            className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 rounded"
+            aria-label="Ledgr POS home"
+          >
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-neutral-900">
+              <ShieldCheck className="w-4 h-4 text-white" aria-hidden="true" />
+            </span>
+            <span className="text-[15px] font-semibold tracking-tight text-neutral-900">
+              Ledgr POS
+            </span>
+          </a>
+
+          {/* Desktop links */}
+          <ul className="hidden md:flex items-center gap-1" role="list">
+            {NAV_LINKS.map((link) => (
+              <li key={link.label}>
+                <a
+                  href={link.href}
+                  className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          {/* Desktop CTA */}
+          <div className="hidden md:flex items-center gap-2">
+            <a
+              href="/login"
+              className="px-4 py-1.5 text-sm font-medium text-neutral-700 hover:text-neutral-900 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900"
+            >
+              Log in
+            </a>
+            <a
+              href="/login"
+              className="px-4 py-1.5 text-sm font-semibold text-white bg-neutral-900 rounded-md hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
+            >
+              Get started
+            </a>
+          </div>
+
+          {/* Mobile menu toggle */}
+          <button
+            type="button"
+            className="md:hidden p-2 -mr-1 rounded-md text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-menu"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileOpen ? (
+              <X className="w-5 h-5" aria-hidden="true" />
             ) : (
-              <>
-                <line x1="3" y1="7" x2="19" y2="7" />
-                <line x1="3" y1="11" x2="19" y2="11" />
-                <line x1="3" y1="15" x2="19" y2="15" />
-              </>
+              <Menu className="w-5 h-5" aria-hidden="true" />
             )}
-          </svg>
-        </button>
-      </div>
+          </button>
+        </nav>
+      </motion.header>
 
       {/* Mobile menu */}
       <AnimatePresence>
-        {menuOpen && (
+        {mobileOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-[#0B0F14] border-t border-white/5 px-6 py-4 flex flex-col gap-4"
+            id="mobile-menu"
+            key="mobile-menu"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="fixed inset-0 z-40 pt-14 bg-white flex flex-col"
           >
-            {links.map(link => (
-              <a key={link} href={`#${link.toLowerCase().replace(/\s+/g, '-')}`} className="text-[#B8C7D9] text-sm">
-                {link}
-              </a>
-            ))}
-            <a href="#" className="text-[#B8C7D9] text-sm">Login</a>
-            <a href="#" className="text-sm px-4 py-2 rounded-md bg-[#2ECC8F] text-[#0B0F14] font-semibold text-center mt-1">
-              Start free trial
-            </a>
+            <nav className="px-4 py-6 flex flex-col gap-1" aria-label="Mobile navigation">
+              {NAV_LINKS.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="px-3 py-3 text-base font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900"
+                >
+                  {link.label}
+                </a>
+              ))}
+              <div className="mt-6 flex flex-col gap-3 pt-6 border-t border-neutral-100">
+                <a
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="px-4 py-2.5 text-center text-sm font-medium text-neutral-700 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900"
+                >
+                  Log in
+                </a>
+                <a
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="px-4 py-2.5 text-center text-sm font-semibold text-white bg-neutral-900 rounded-lg hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900"
+                >
+                  Get started
+                </a>
+              </div>
+            </nav>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.nav>
-  )
+    </>
+  );
 }

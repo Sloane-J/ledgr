@@ -1,203 +1,327 @@
-import { motion } from 'framer-motion'
-import { useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { useRef, useEffect, useState } from "react";
+import { motion, useReducedMotion, useInView } from "framer-motion";
+import { Zap, RefreshCcw, Monitor } from "lucide-react";
 
-const INVENTORY_ROWS = [
-  { name: 'Coca Cola 1L', sku: 'BEV-001', category: 'Beverages', stock: 48, status: 'ok' },
-  { name: 'Sunlight Soap 500g', sku: 'HH-014', category: 'Household', stock: 7, status: 'low' },
-  { name: 'Indomie Noodles', sku: 'FD-033', category: 'Food', stock: 3, status: 'critical' },
-  { name: 'Milo 400g', sku: 'BEV-008', category: 'Beverages', stock: 22, status: 'ok' },
-  { name: 'Veg Oil 750ml', sku: 'FD-011', category: 'Food', stock: 14, status: 'ok' },
-]
-
-const STATUS_STYLES: Record<string, { dot: string; label: string; text: string }> = {
-  ok: { dot: '#2ECC8F', label: 'In stock', text: 'text-[#2ECC8F]' },
-  low: { dot: '#F59E0B', label: 'Low stock', text: 'text-amber-400' },
-  critical: { dot: '#F87171', label: 'Critical', text: 'text-red-400' },
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+interface Metric {
+  value: string;
+  label: string;
+  delta: string;
+  positive: boolean;
 }
 
-const BAR_DATA = [
-  { day: 'Mon', value: 60 },
-  { day: 'Tue', value: 85 },
-  { day: 'Wed', value: 70 },
-  { day: 'Thu', value: 92 },
-  { day: 'Fri', value: 78 },
-  { day: 'Sat', value: 100 },
-  { day: 'Sun', value: 55 },
-]
+interface TickerItem {
+  type: "sale" | "refund" | "stock";
+  text: string;
+}
 
-export default function DashboardPreview() {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-80px' })
+// ---------------------------------------------------------------------------
+// Data
+// ---------------------------------------------------------------------------
+const METRICS: Metric[] = [
+  { value: "GH₵8,240", label: "Sales today", delta: "+14%", positive: true },
+  { value: "126", label: "Orders", delta: "+8", positive: true },
+  { value: "1,840", label: "Items in stock", delta: "-12", positive: false },
+  { value: "4", label: "Staff active", delta: "", positive: true },
+];
+
+const TICKER_ITEMS: TickerItem[] = [
+  { type: "sale", text: "Sale · GH₵42.00 · Coke 500ml · 2 mins ago" },
+  { type: "sale", text: "Sale · GH₵115.00 · Bread × 3, Milk 1L · 4 mins ago" },
+  { type: "refund", text: "Refund · GH₵18.00 · Order #1042 · 6 mins ago" },
+  { type: "stock", text: "Low stock · Milk 1L · 7 remaining" },
+  { type: "sale", text: "Sale · GH₵260.00 · Rice 5kg, Cooking Oil · 9 mins ago" },
+  { type: "stock", text: "Low stock · Coke 500ml · 3 remaining" },
+  { type: "sale", text: "Sale · GH₵88.00 · Eggs × 2 trays · 11 mins ago" },
+  { type: "refund", text: "Refund · GH₵44.00 · Order #1039 · 15 mins ago" },
+  { type: "sale", text: "Sale · GH₵330.00 · Noodles × 10, Sugar 1kg · 18 mins ago" },
+];
+
+const VALUE_PROPS = [
+  {
+    icon: Zap,
+    title: "Sale in under 10 seconds",
+    desc: "Search, add to cart, collect payment — done before the next customer steps up.",
+  },
+  {
+    icon: RefreshCcw,
+    title: "Stock updates instantly",
+    desc: "Every sale and refund adjusts inventory in real time. No manual counts needed.",
+  },
+  {
+    icon: Monitor,
+    title: "Works on any device",
+    desc: "Tablet, laptop, or desktop — the interface adapts so your team can sell anywhere.",
+  },
+];
+
+// Ticker dot colors
+const tickerDot: Record<TickerItem["type"], string> = {
+  sale: "bg-emerald-400",
+  refund: "bg-red-400",
+  stock: "bg-yellow-400",
+};
+
+// Dashboard screenshot — replace with actual app screenshot
+const DASHBOARD_IMG =
+  "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1400&q=80&auto=format&fit=crop";
+
+// ---------------------------------------------------------------------------
+// Ticker strip
+// ---------------------------------------------------------------------------
+function Ticker({ items }: { items: TickerItem[] }) {
+  const reduceMotion = useReducedMotion();
+  const doubled = [...items, ...items]; // seamless loop
 
   return (
-    <section ref={ref} className="bg-[#0D1117] py-24 overflow-hidden">
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.45 }}
-          className="text-center mb-14"
-        >
-          <p className="text-xs font-mono uppercase tracking-widest text-[#2ECC8F] mb-4">Live control panel</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Your business at a glance
-          </h2>
-          <p className="text-[#B8C7D9] max-w-lg mx-auto">
-            One dashboard. Every sale, every product, every staff member — all visible in real time.
-          </p>
-        </motion.div>
+    <div
+      className="relative overflow-hidden border-y border-white/10 py-2.5"
+      aria-label="Live activity feed"
+      aria-live="off"
+    >
+      {/* Left fade */}
+      <div className="pointer-events-none absolute left-0 inset-y-0 w-16 z-10 bg-gradient-to-r from-[#0A0A0A] to-transparent" />
+      {/* Right fade */}
+      <div className="pointer-events-none absolute right-0 inset-y-0 w-16 z-10 bg-gradient-to-l from-[#0A0A0A] to-transparent" />
 
-        {/* Dashboard mock */}
-        <motion.div
-          initial={{ opacity: 0, y: 32 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.15, duration: 0.6, ease: 'easeOut' }}
-          className="bg-[#0E1620] border border-white/8 rounded-2xl overflow-hidden"
-        >
-          {/* Window bar */}
-          <div className="flex items-center gap-2 px-5 py-3 border-b border-white/8 bg-[#0B0F14]">
-            <div className="flex gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#F87171]" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#2ECC8F]" />
-            </div>
-            <div className="flex-1 flex justify-center">
-              <div className="bg-white/5 rounded px-4 py-0.5 text-[10px] text-white/30 font-mono">
-                ledgrpos.app/dashboard
-              </div>
-            </div>
+      <motion.div
+        className="flex gap-10 w-max"
+        animate={reduceMotion ? {} : { x: ["0%", "-50%"] }}
+        transition={
+          reduceMotion
+            ? {}
+            : {
+                duration: 32,
+                ease: "linear",
+                repeat: Infinity,
+              }
+        }
+      >
+        {doubled.map((item, i) => (
+          <span
+            key={i}
+            className="flex items-center gap-2 text-[12px] text-white/50 whitespace-nowrap font-medium"
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${tickerDot[item.type]}`}
+              aria-hidden="true"
+            />
+            {item.text}
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Animated counter
+// ---------------------------------------------------------------------------
+function AnimatedValue({ value }: { value: string }) {
+  const [display, setDisplay] = useState("0");
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (!inView) return;
+    if (reduceMotion) { setDisplay(value); return; }
+
+    // Extract numeric part
+    const numeric = parseFloat(value.replace(/[^0-9.]/g, ""));
+    const prefix = value.match(/^[^0-9]*/)?.[0] ?? "";
+    const suffix = value.match(/[^0-9.]*$/)?.[0] ?? "";
+    const isInt = !value.includes(".");
+
+    let start = 0;
+    const duration = 900;
+    const startTime = performance.now();
+
+    const tick = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = eased * numeric;
+      setDisplay(
+        `${prefix}${isInt ? Math.round(current).toLocaleString() : current.toFixed(2)}${suffix}`
+      );
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [inView, value, reduceMotion]);
+
+  return <span ref={ref}>{display || value}</span>;
+}
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+export default function DashboardPreview() {
+  const reduceMotion = useReducedMotion();
+  const sectionRef = useRef(null);
+  const inView = useInView(sectionRef, { once: true, margin: "-80px" });
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative bg-[#0A0A0A] py-0 overflow-hidden"
+      aria-labelledby="preview-heading"
+    >
+      {/* Top ticker */}
+      <Ticker items={TICKER_ITEMS} />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20">
+
+        {/* ── Headline + metrics row ── */}
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10 mb-14">
+
+          {/* Left: heading */}
+          <div className="max-w-lg">
+            <motion.p
+              initial={reduceMotion ? {} : { opacity: 0, y: 12 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.45, delay: 0.05 }}
+              className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/30 mb-3"
+            >
+              Dashboard Preview
+            </motion.p>
+            <motion.h2
+              id="preview-heading"
+              initial={reduceMotion ? {} : { opacity: 0, y: 16 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+              className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-[1.1]"
+            >
+              Your entire business, one screen
+            </motion.h2>
+            <motion.p
+              initial={reduceMotion ? {} : { opacity: 0, y: 12 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.18 }}
+              className="mt-4 text-base text-white/40 leading-relaxed"
+            >
+              From ringing up a sale to reviewing yesterday's revenue — Ledgr
+              puts every tool your team needs in one fast, no-clutter interface.
+            </motion.p>
           </div>
 
-          {/* Dashboard layout */}
-          <div className="flex h-[520px] overflow-hidden">
-            {/* Sidebar */}
-            <div className="w-14 md:w-48 bg-[#0B0F14] border-r border-white/5 flex flex-col py-4 flex-shrink-0">
-              <div className="px-3 mb-6 hidden md:block">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-[#2ECC8F] rounded flex items-center justify-center">
-                    <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-                      <rect x="1" y="7" width="4" height="6" fill="#0B0F14" rx="0.5" />
-                      <rect x="5" y="4" width="4" height="9" fill="#0B0F14" rx="0.5" />
-                      <rect x="9" y="1" width="4" height="12" fill="#0B0F14" rx="0.5" />
-                    </svg>
-                  </div>
-                  <span className="text-white text-xs font-semibold">Ledgr POS</span>
-                </div>
+          {/* Right: metric pills */}
+          <motion.div
+            initial={reduceMotion ? {} : { opacity: 0, y: 16 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5, delay: 0.22 }}
+            className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3 lg:min-w-[280px]"
+          >
+            {METRICS.map((m) => (
+              <div
+                key={m.label}
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 flex flex-col gap-0.5"
+              >
+                <span className="text-xl font-bold text-white tracking-tight">
+                  <AnimatedValue value={m.value} />
+                </span>
+                <span className="text-[11px] text-white/40">{m.label}</span>
+                {m.delta && (
+                  <span
+                    className={`text-[11px] font-semibold mt-0.5 ${
+                      m.positive ? "text-emerald-400" : "text-red-400"
+                    }`}
+                  >
+                    {m.delta} vs yesterday
+                  </span>
+                )}
               </div>
-              {[
-                { icon: '⊞', label: 'Dashboard', active: true },
-                { icon: '◫', label: 'Inventory', active: false },
-                { icon: '◈', label: 'Sales', active: false },
-                { icon: '◻', label: 'Customers', active: false },
-                { icon: '◑', label: 'Reports', active: false },
-                { icon: '⊙', label: 'Settings', active: false },
-              ].map(item => (
-                <div
-                  key={item.label}
-                  className={`flex items-center gap-3 px-3 py-2 mx-2 rounded-md mb-0.5 cursor-default ${
-                    item.active ? 'bg-[#2ECC8F]/10 text-[#2ECC8F]' : 'text-white/30 hover:text-white/50'
-                  }`}
-                >
-                  <span className="text-sm">{item.icon}</span>
-                  <span className="text-xs hidden md:block">{item.label}</span>
-                </div>
-              ))}
-            </div>
+            ))}
+          </motion.div>
+        </div>
 
-            {/* Main content */}
-            <div className="flex-1 overflow-auto p-4 md:p-5">
-              {/* Top metrics */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-                {[
-                  { label: "Today's revenue", value: 'GH₵ 2,847', change: '+12%', up: true },
-                  { label: 'Transactions', value: '134', change: '+8', up: true },
-                  { label: 'Low stock alerts', value: '3', change: '', up: false },
-                  { label: 'Active staff', value: '4', change: '', up: true },
-                ].map(metric => (
-                  <div key={metric.label} className="bg-[#111820] border border-white/6 rounded-lg p-3">
-                    <p className="text-[10px] text-white/40 mb-1.5 leading-none">{metric.label}</p>
-                    <p className="text-lg font-bold text-white font-mono leading-none mb-1">{metric.value}</p>
-                    {metric.change && (
-                      <p className={`text-[10px] font-mono ${metric.up ? 'text-[#2ECC8F]' : 'text-red-400'}`}>
-                        {metric.up ? '↑' : '↓'} {metric.change}
-                      </p>
-                    )}
-                  </div>
+        {/* ── Browser mockup ── */}
+        <motion.div
+          initial={reduceMotion ? {} : { opacity: 0, y: 32, scale: 0.98 }}
+          animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.28 }}
+        >
+          {/* Chrome bar */}
+          <div className="rounded-t-2xl border border-b-0 border-white/10 bg-white/5 px-5 pt-4 pb-0">
+            <div className="flex items-center gap-2 mb-4" aria-hidden="true">
+              <span className="w-3 h-3 rounded-full bg-red-500/60 block" />
+              <span className="w-3 h-3 rounded-full bg-yellow-500/60 block" />
+              <span className="w-3 h-3 rounded-full bg-green-500/60 block" />
+              {/* Tab strip */}
+              <div className="flex gap-1 ml-3">
+                {["Register", "Dashboard", "Inventory"].map((tab, i) => (
+                  <span
+                    key={tab}
+                    className={`text-[11px] px-3 py-1 rounded-t-md font-medium ${
+                      i === 0
+                        ? "bg-white/10 text-white"
+                        : "text-white/30"
+                    }`}
+                  >
+                    {tab}
+                  </span>
                 ))}
               </div>
-
-              {/* Lower: chart + table */}
-              <div className="grid lg:grid-cols-5 gap-3">
-                {/* Bar chart */}
-                <div className="lg:col-span-2 bg-[#111820] border border-white/6 rounded-lg p-4">
-                  <p className="text-xs text-white/50 mb-4">Sales this week</p>
-                  <div className="flex items-end gap-1.5 h-28">
-                    {BAR_DATA.map(bar => (
-                      <div key={bar.day} className="flex-1 flex flex-col items-center gap-1">
-                        <div
-                          className="w-full rounded-sm bg-[#2ECC8F]/20 relative overflow-hidden"
-                          style={{ height: `${bar.value}%` }}
-                        >
-                          <div
-                            className="absolute bottom-0 left-0 right-0 bg-[#2ECC8F] rounded-sm"
-                            style={{ height: `${bar.value}%` }}
-                          />
-                        </div>
-                        <span className="text-[9px] text-white/30 font-mono">{bar.day}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Inventory table */}
-                <div className="lg:col-span-3 bg-[#111820] border border-white/6 rounded-lg overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/6">
-                    <p className="text-xs text-white/50">Inventory status</p>
-                    <span className="text-[10px] text-[#2ECC8F] font-mono">Live</span>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-white/5">
-                          <th className="text-left px-4 py-2 text-[10px] text-white/30 font-normal">Product</th>
-                          <th className="text-left px-3 py-2 text-[10px] text-white/30 font-normal hidden md:table-cell">SKU</th>
-                          <th className="text-right px-3 py-2 text-[10px] text-white/30 font-normal">Stock</th>
-                          <th className="text-right px-4 py-2 text-[10px] text-white/30 font-normal">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {INVENTORY_ROWS.map((row, i) => {
-                          const s = STATUS_STYLES[row.status]
-                          return (
-                            <tr key={row.sku} className={`${i < INVENTORY_ROWS.length - 1 ? 'border-b border-white/4' : ''}`}>
-                              <td className="px-4 py-2.5 text-xs text-white/80 font-medium">{row.name}</td>
-                              <td className="px-3 py-2.5 text-[10px] text-white/30 font-mono hidden md:table-cell">{row.sku}</td>
-                              <td className="px-3 py-2.5 text-xs text-white/60 font-mono text-right">{row.stock}</td>
-                              <td className="px-4 py-2.5 text-right">
-                                <div className="flex items-center justify-end gap-1.5">
-                                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.dot }} />
-                                  <span className={`text-[10px] ${s.text}`}>{s.label}</span>
-                                </div>
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+              {/* URL bar */}
+              <div className="flex-1 ml-2 h-6 rounded-md bg-white/8 border border-white/10 flex items-center px-3">
+                <span className="text-[10px] text-white/30 truncate">
+                  ledgr.app/register
+                </span>
               </div>
             </div>
           </div>
+
+          {/* Screenshot */}
+          <div className="relative overflow-hidden rounded-b-2xl border border-white/10">
+            <img
+              src={DASHBOARD_IMG}
+              alt="Ledgr POS register and dashboard interface — replace with actual app screenshot"
+              className="w-full object-cover object-top"
+              style={{ maxHeight: "520px" }}
+              loading="lazy"
+              decoding="async"
+            />
+            {/* Bottom fade into dark */}
+            <div
+              className="pointer-events-none absolute bottom-0 inset-x-0 h-28"
+              aria-hidden="true"
+              style={{
+                background:
+                  "linear-gradient(to top, #0A0A0A 0%, transparent 100%)",
+              }}
+            />
+          </div>
         </motion.div>
 
-        {/* Caption */}
-        <p className="text-center text-xs text-white/25 mt-6 font-mono">
-          Simulated dashboard — actual UI may vary
-        </p>
+        {/* ── Value props row ── */}
+        <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {VALUE_PROPS.map((vp, i) => {
+            const Icon = vp.icon;
+            return (
+              <motion.div
+                key={vp.title}
+                initial={reduceMotion ? {} : { opacity: 0, y: 16 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.38 + i * 0.08 }}
+                className="rounded-xl border border-white/10 bg-white/5 px-5 py-4 flex gap-4 items-start"
+              >
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mt-0.5">
+                  <Icon className="w-4 h-4 text-white/70" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">{vp.title}</p>
+                  <p className="mt-1 text-xs text-white/40 leading-relaxed">{vp.desc}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
+
+      {/* Bottom ticker (reversed direction) */}
+      <Ticker items={[...TICKER_ITEMS].reverse()} />
     </section>
-  )
+  );
 }

@@ -1,79 +1,109 @@
-import { motion } from 'framer-motion'
-import { useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { useRef } from "react";
+import { motion, useInView, useReducedMotion, Variants } from "framer-motion";
+import { ArrowRight, Zap, Check } from "lucide-react";
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+
+const highlights = [
+  "No credit card required",
+  "Set up in under 5 minutes",
+  "Free during beta",
+];
+
+// ─── Main export ──────────────────────────────────────────────────────────────
 
 export default function CTA() {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-80px' })
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const reduceMotion = useReducedMotion();
+
+  // Animation variants adapted to the reference code's style
+  const containerMotion = {
+    initial: reduceMotion ? {} : { opacity: 0, y: 16 },
+    animate: inView ? { opacity: 1, y: 0 } : {},
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
+  };
 
   return (
-    <section ref={ref} className="bg-[#0B0F14] py-24">
-      <div className="max-w-3xl mx-auto px-6 text-center">
+    <section
+      className="relative bg-white py-24 px-4 sm:px-6"
+      aria-labelledby="cta-heading"
+    >
+      <div className="max-w-5xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.55 }}
+          ref={ref}
+          {...containerMotion}
+          className="rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-hidden px-6 py-16 md:py-20 flex flex-col items-center text-center relative max-w-3xl mx-auto"
         >
-          {/* Decorative top element */}
-          <div className="flex justify-center mb-10">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-2xl bg-[#2ECC8F]/10 border border-[#2ECC8F]/20 flex items-center justify-center">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <rect x="2" y="8" width="7" height="14" rx="1" fill="#2ECC8F" opacity="0.7" />
-                  <rect x="9" y="4" width="6" height="18" rx="1" fill="#2ECC8F" />
-                  <rect x="15" y="1" width="7" height="21" rx="1" fill="#2ECC8F" opacity="0.5" />
-                </svg>
-              </div>
-              {/* Pulse rings */}
-              <div className="absolute inset-0 rounded-2xl border border-[#2ECC8F]/10 animate-ping" style={{ animationDuration: '2s' }} />
-            </div>
+          {/* Tag Header layout block from reference code design elements */}
+          <div className="flex items-center gap-3 mb-6 w-full max-w-xs justify-center">
+            <div className="h-px w-8 bg-neutral-100" aria-hidden="true" />
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 border border-neutral-200 rounded-full px-2 py-0.5 bg-neutral-50">
+              Ready
+            </span>
+            <div className="h-px w-8 bg-neutral-100" aria-hidden="true" />
           </div>
 
-          <h2
-            className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          {/* Icon mark using full neutral dark block */}
+          <div
+            className="flex-shrink-0 w-12 h-12 rounded-xl bg-neutral-900 flex items-center justify-center mb-6"
+            aria-hidden="true"
           >
-            Start managing your <br />
-            <span className="text-[#2ECC8F]">business better</span> today
+            <Zap className="w-5 h-5 text-white" fill="white" aria-hidden="true" />
+          </div>
+
+          {/* Heading using strict text-neutral family layout */}
+          <h2
+            id="cta-heading"
+            className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 mb-4 max-w-md leading-tight"
+          >
+            Start managing your store today
           </h2>
 
-          <p className="text-[#B8C7D9] text-lg mb-10 max-w-xl mx-auto">
-            No setup fees. No long contracts. Get your POS system running
-            before the end of the week.
+          {/* Sub description layout */}
+          <p className="max-w-md mx-auto text-sm text-neutral-500 leading-relaxed mb-8">
+            A full POS and inventory system ready to go — sales, stock, staff,
+            and reporting in one place.
           </p>
 
-          <div className="flex flex-col sm:flex-row justify-center gap-3">
+          {/* Action buttons following reference layout controls */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8 w-full sm:w-auto">
             <a
-              href="#"
-              className="px-8 py-3.5 rounded-md bg-[#2ECC8F] text-[#0B0F14] font-bold text-sm hover:bg-[#25b87e] transition-colors"
+              href="/signup"
+              className="h-9 inline-flex items-center justify-center gap-2 bg-neutral-900 border border-neutral-900 text-white text-xs font-semibold px-5 rounded-lg hover:bg-neutral-800 transition-colors duration-150 w-full sm:w-auto"
+              rel="noopener noreferrer"
             >
-              Start free trial
+              Get started free
+              <ArrowRight size={14} strokeWidth={2.25} aria-hidden="true" />
             </a>
             <a
-              href="#"
-              className="px-8 py-3.5 rounded-md border border-white/15 text-white text-sm hover:bg-white/5 transition-colors"
+              href="/demo"
+              className="h-9 inline-flex items-center justify-center gap-2 text-xs font-semibold text-neutral-500 px-5 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 transition-colors duration-150 w-full sm:w-auto"
+              rel="noopener noreferrer"
             >
-              Talk to us first
+              View live demo
             </a>
           </div>
 
-          {/* Micro trust signals */}
-          <div className="flex flex-wrap justify-center gap-6 mt-12">
-            {[
-              'No credit card required',
-              'Free setup support',
-              'Cancel anytime',
-            ].map(signal => (
-              <div key={signal} className="flex items-center gap-2 text-xs text-[#B8C7D9]/50">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2 6l3 3 5-5" stroke="#2ECC8F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                {signal}
-              </div>
+          {/* Highlights structured with custom active badges from reference */}
+          <ul
+            className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 pt-6 border-t border-neutral-100 w-full justify-center"
+            aria-label="Offer highlights"
+          >
+            {highlights.map((item) => (
+              <li
+                key={item}
+                className="flex items-center gap-2 text-[11px] text-neutral-500 font-medium"
+              >
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center gap-1">
+                  <Check size={10} strokeWidth={3} />
+                </span>
+                {item}
+              </li>
             ))}
-          </div>
+          </ul>
         </motion.div>
       </div>
     </section>
-  )
+  );
 }

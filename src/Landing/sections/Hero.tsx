@@ -1,193 +1,168 @@
-import { useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 
-const TICKER_EVENTS = [
-  { type: 'sale', text: 'Sale · Coca Cola 1L × 4', value: '+GH₵ 18.00', time: 'just now' },
-  { type: 'low', text: 'Low stock · Sunlight Soap', value: '3 units', time: '1m ago' },
-  { type: 'sale', text: 'Sale · Milo 400g × 2', value: '+GH₵ 42.00', time: '2m ago' },
-  { type: 'restock', text: 'Restock · Evaporated Milk', value: '+48 units', time: '5m ago' },
-  { type: 'sale', text: 'Sale · Toilet Paper × 6', value: '+GH₵ 36.00', time: '6m ago' },
-  { type: 'low', text: 'Low stock · Indomie Noodles', value: '5 units', time: '9m ago' },
-  { type: 'sale', text: 'Sale · Veg Oil 750ml × 3', value: '+GH₵ 90.00', time: '11m ago' },
-]
+const TRUST_BADGES = [
+  "Cash, Card & MoMo payments",
+  "Real-time stock tracking",
+  "Role-based staff access",
+];
 
-const TYPE_COLORS: Record<string, { dot: string; badge: string; text: string }> = {
-  sale: { dot: '#2ECC8F', badge: 'bg-[#2ECC8F]/10 text-[#2ECC8F]', text: 'Sale' },
-  low: { dot: '#F59E0B', badge: 'bg-amber-500/10 text-amber-400', text: 'Alert' },
-  restock: { dot: '#60A5FA', badge: 'bg-blue-500/10 text-blue-400', text: 'Restock' },
-}
+// Unsplash POS/retail dashboard image — replace with actual app screenshot
+const DASHBOARD_IMG_URL =
+  "/images/admin-dashboard.jpg";
 
-function LiveTicker() {
-  const [events, setEvents] = useState(TICKER_EVENTS)
-  const [flash, setFlash] = useState(false)
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const, delay },
+});
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const pool = TICKER_EVENTS
-      const next = pool[Math.floor(Math.random() * pool.length)]
-      setFlash(true)
-      setTimeout(() => setFlash(false), 400)
-      setEvents(prev => [{ ...next, time: 'just now' }, ...prev.slice(0, 5)])
-    }, 2800)
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <div className="bg-[#0E1620] border border-white/8 rounded-xl overflow-hidden w-full max-w-sm">
-      {/* Header bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/8">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#2ECC8F] animate-pulse" />
-          <span className="text-xs text-[#B8C7D9] font-mono tracking-wide">LIVE ACTIVITY</span>
-        </div>
-        <span className="text-[10px] text-white/30 font-mono">Today</span>
-      </div>
-
-      {/* Events */}
-      <div className={`transition-colors duration-200 ${flash ? 'bg-[#2ECC8F]/5' : ''}`}>
-        {events.slice(0, 6).map((event, i) => {
-          const c = TYPE_COLORS[event.type]
-          return (
-            <motion.div
-              key={`${event.text}-${i}`}
-              initial={i === 0 ? { opacity: 0, x: -8 } : false}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.25 }}
-              className={`flex items-center gap-3 px-4 py-2.5 ${i !== events.length - 1 ? 'border-b border-white/5' : ''}`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: c.dot }} />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-[#B8C7D9] truncate">{event.text}</p>
-              </div>
-              <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                <span className="text-xs font-semibold text-white font-mono">{event.value}</span>
-                <span className="text-[10px] text-white/30 font-mono">{event.time}</span>
-              </div>
-            </motion.div>
-          )
-        })}
-      </div>
-
-      {/* Mini stats footer */}
-      <div className="flex border-t border-white/8">
-        {[
-          { label: "Today's revenue", value: 'GH₵ 2,847' },
-          { label: 'Transactions', value: '134' },
-        ].map((stat, i) => (
-          <div key={stat.label} className={`flex-1 px-4 py-2.5 ${i === 0 ? 'border-r border-white/8' : ''}`}>
-            <p className="text-[10px] text-white/40 mb-0.5">{stat.label}</p>
-            <p className="text-sm font-semibold text-[#2ECC8F] font-mono">{stat.value}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+const fadeIn = (delay = 0) => ({
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  transition: { duration: 0.6, delay },
+});
 
 export default function Hero() {
+  const reduceMotion = useReducedMotion();
+
+  const motionProps = (delay = 0) => (reduceMotion ? {} : fadeUp(delay));
+
   return (
-    <section className="relative min-h-screen bg-[#0B0F14] flex items-center pt-16 overflow-hidden">
+    <section
+      className="relative min-h-screen flex flex-col items-center justify-start pt-28 pb-0 overflow-hidden bg-white"
+      aria-labelledby="hero-heading"
+    >
       {/* Subtle grid background */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="pointer-events-none absolute inset-0"
+        aria-hidden="true"
         style={{
-          backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
-          backgroundSize: '40px 40px',
+          backgroundImage: `
+            linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+            linear-gradient(to bottom, #f0f0f0 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      />
+      {/* Fade grid toward center */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden="true"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 70%, #fff 100%)",
         }}
       />
 
-      {/* Accent glow */}
-      <div className="absolute top-1/3 right-1/3 w-72 h-72 bg-[#2ECC8F]/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center text-center px-4 sm:px-6 max-w-4xl mx-auto w-full">
 
-      <div className="relative max-w-6xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-16 items-center">
-        {/* Left: Copy */}
-        <div>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#2ECC8F]/30 bg-[#2ECC8F]/5 mb-8"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#2ECC8F]" />
-            <span className="text-xs text-[#2ECC8F] font-medium tracking-wide">Real-time inventory control</span>
-          </motion.div>
+        {/* Category pill */}
+        <motion.div {...motionProps(0)} className="mb-6">
+          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-neutral-200 bg-white text-[13px] font-medium text-neutral-600 shadow-sm">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+            POS &amp; Inventory — built for retail, cafes &amp; small shops
+          </span>
+        </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.55 }}
-            className="text-4xl md:text-5xl font-bold text-white leading-[1.12] tracking-tight mb-6"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-          >
-            Run your entire <br />
-            business from <br />
-            <span className="text-[#2ECC8F]">one POS system</span>
-          </motion.h1>
+        {/* Headline */}
+        <motion.h1
+          id="hero-heading"
+          {...motionProps(0.1)}
+          className="text-4xl sm:text-5xl lg:text-[62px] font-bold tracking-tight text-neutral-900 leading-[1.1] mb-5"
+        >
+          Supercharge your sales and Inventory with Ledgr POS.{" "}
+        </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.32, duration: 0.5 }}
-            className="text-[#B8C7D9] text-lg leading-relaxed mb-10 max-w-md"
-          >
-            Inventory, sales, and customer management in real time.
-            Built for retail businesses that can't afford to lose stock.
-          </motion.p>
+        {/* Subtitle */}
+        <motion.p
+          {...motionProps(0.18)}
+          className="max-w-xl text-base sm:text-lg text-neutral-500 leading-relaxed mb-8"
+        >
+          A modern Point of Sale and Inventory Management system that handles sales, tracks stock in real time, and keeps your team accountable — all from one fast, reliable interface.
+        </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.44, duration: 0.5 }}
-            className="flex flex-col sm:flex-row gap-3"
+        {/* CTAs */}
+        <motion.div
+          {...motionProps(0.26)}
+          className="flex flex-col sm:flex-row items-center gap-3 mb-8"
+        >
+          <a
+            href="/login"
+            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-neutral-900 rounded-lg hover:bg-neutral-700 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
           >
-            <a
-              href="#"
-              className="px-6 py-3 rounded-md bg-[#2ECC8F] text-[#0B0F14] font-semibold text-sm hover:bg-[#25b87e] transition-colors text-center"
+            Open the register
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </a>
+          <a
+            href="#features"
+            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-neutral-700 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900"
+          >
+            See all features
+          </a>
+        </motion.div>
+
+        {/* Trust badges */}
+        <motion.ul
+          {...motionProps(0.34)}
+          className="flex flex-wrap justify-center gap-x-5 gap-y-2 mb-12"
+          role="list"
+        >
+          {TRUST_BADGES.map((badge) => (
+            <li
+              key={badge}
+              className="flex items-center gap-1.5 text-xs text-neutral-500 font-medium"
             >
-              Start free trial
-            </a>
-            <a
-              href="#features"
-              className="px-6 py-3 rounded-md border border-white/15 text-white text-sm hover:bg-white/5 transition-colors text-center"
-            >
-              View features →
-            </a>
-          </motion.div>
+              <CheckCircle2
+                className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0"
+                aria-hidden="true"
+              />
+              {badge}
+            </li>
+          ))}
+        </motion.ul>
+      </div>
 
-          {/* Social proof */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-            className="mt-12 flex items-center gap-4"
-          >
-            <div className="flex -space-x-2">
-              {['#4A5568', '#2D3748', '#718096', '#1A202C'].map((bg, i) => (
-                <div
-                  key={i}
-                  className="w-7 h-7 rounded-full border-2 border-[#0B0F14] flex items-center justify-center text-[9px] text-white font-bold"
-                  style={{ background: bg }}
-                >
-                  {['KA', 'MB', 'DA', 'EO'][i]}
-                </div>
-              ))}
+      {/* Dashboard mockup */}
+      <motion.div
+        {...(reduceMotion ? {} : fadeIn(0.45))}
+        className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6"
+      >
+        {/* Browser chrome */}
+        <div className="rounded-t-xl border border-b-0 border-neutral-200 bg-neutral-100 px-4 pt-3 pb-0 shadow-[0_-4px_24px_-4px_rgba(0,0,0,0.08)]">
+          <div className="flex items-center gap-1.5 mb-3" aria-hidden="true">
+            <span className="w-3 h-3 rounded-full bg-red-400 block" />
+            <span className="w-3 h-3 rounded-full bg-yellow-400 block" />
+            <span className="w-3 h-3 rounded-full bg-green-400 block" />
+            <div className="flex-1 ml-3 mr-1 h-5 rounded bg-white border border-neutral-200 flex items-center px-2">
+              <span className="text-[10px] text-neutral-400 truncate">
+                ledgr.app/register
+              </span>
             </div>
-            <p className="text-xs text-[#B8C7D9]">
-              Trusted by retail businesses across Ghana
-            </p>
-          </motion.div>
+          </div>
         </div>
 
-        {/* Right: Live ticker */}
-        <motion.div
-          initial={{ opacity: 0, x: 24 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.35, duration: 0.6, ease: 'easeOut' }}
-          className="flex justify-center md:justify-end"
-        >
-          <LiveTicker />
-        </motion.div>
-      </div>
+        {/* Screenshot */}
+        <div className="relative overflow-hidden rounded-b-xl border border-neutral-200 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)]">
+          <img
+            src={DASHBOARD_IMG_URL}
+            alt="Ledgr POS interface showing the sales register and inventory dashboard — replace with actual app screenshot"
+            className="w-full object-cover object-top"
+            style={{ maxHeight: "480px" }}
+            loading="eager"
+            decoding="async"
+          />
+          {/* Bottom fade into white */}
+          <div
+            className="pointer-events-none absolute bottom-0 inset-x-0 h-24"
+            aria-hidden="true"
+            style={{
+              background: "linear-gradient(to top, #fff 0%, transparent 100%)",
+            }}
+          />
+        </div>
+      </motion.div>
     </section>
-  )
+  );
 }
