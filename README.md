@@ -1,4 +1,4 @@
-# 🚀 POS & Inventory Management System
+# Ledgr POS & Inventory Management System
 
 A modern, full-stack Point of Sale (POS) and Inventory Management solution built for speed, reliability, and ease of use. This application is designed for retail businesses, cafes, and small shops to manage sales, track inventory, and monitor staff activity in real-time.
 
