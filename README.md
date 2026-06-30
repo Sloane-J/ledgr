@@ -1,166 +1,286 @@
-# Ledgr POS & Inventory Management System
+# Ledgr — Retail Management System
 
-A modern, full-stack Point of Sale (POS) and Inventory Management solution built for speed, reliability, and ease of use. This application is designed for retail businesses, cafes, and small shops to manage sales, track inventory, and monitor staff activity in real-time.
-
----
-
-## 🛠 Tech Stack
-
-- **Frontend:** React 18+ with TypeScript
-- **Build Tool:** Vite
-- **Styling:** Tailwind CSS (Mobile-first, responsive design)
-- **Database & Auth:** Supabase (PostgreSQL)
-- **Icons:** Lucide React
-- **Animations:** Framer Motion
-- **Notifications:** Sonner
-- **Charts:** Recharts (Dashboard analytics)
+> An all-in-one retail management system built for small shops and businesses in Ghana. Fast, reliable, and designed for the way Ghanaian retail actually works.
 
 ---
 
-## 📂 Project Structure
+## What is Ledgr?
 
-```text
+Ledgr is a full-featured retail management system that goes beyond a traditional POS. It handles your entire shop operation — sales, inventory, customers, suppliers, staff, and reporting — from a single interface that works on any screen.
+
+Built with barcode scanners and keyboard-first workflows in mind, Ledgr is fast enough for busy counter environments and detailed enough for end-of-day reconciliation.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18 + TypeScript |
+| Build | Vite |
+| Styling | Tailwind CSS |
+| Database & Auth | Supabase (PostgreSQL) |
+| Routing | React Router v6 |
+| Charts | Recharts |
+| Notifications | Sonner |
+| Icons | Lucide React |
+| PWA | Service Worker + Web Manifest |
+
+---
+
+## Features
+
+### Register (POS)
+- Barcode scanner support — scan directly into the product list with no extra configuration
+- Category-first product browsing — select a category to view its products as a fast compact list
+- Keyboard-first design — `/` to search, `F2` to pay, arrow keys for categories, numpad always active
+- Cart with quantity controls, direct quantity input, and per-item removal
+- Customer name autocomplete — links orders to existing profiles or creates new ones on the fly
+- Discount by percentage per order
+- Order notes
+- Hold and resume orders — saved to your account, not just the device
+- Multiple payment methods:
+  - **Cash** — numpad entry, change due calculated automatically, quick-amount buttons
+  - **Card** — terminal confirmation with optional last-4-digits or reference number
+  - **Mobile Money (MoMo)** — send STK prompt to customer or confirm pay-to-account after funds received
+- Full-screen payment overlay with order summary, method panel, and numpad
+- Receipt modal — preview before printing, consistent with app design
+- Thermal receipt printing (80mm) with barcode, itemized totals, and payment details
+
+### Inventory
+- Add, edit, and delete products with images, SKU, price, and stock quantity
+- Real-time stock tracking — decrements on sale, restores on refund
+- Low stock visual indicators with configurable threshold
+- Category assignment per product
+- Bulk sample catalog seeding for testing
+
+### Orders
+- Full transaction history with items, staff member, customer, and payment method
+- One-click refund — marks order as refunded and restores stock automatically
+- Void orders with reason
+- Status badges: Completed, Refunded, Voided, Pending
+
+### Customers
+- Customer database with name, email, and phone
+- Order history per customer
+- Auto-created on first purchase if name is provided at checkout
+
+### Suppliers
+- Supplier directory with contact details
+- Supplier order tracking with status and line items
+
+### Reports
+- Revenue over time
+- Top-selling products
+- Payment method breakdown
+- Staff performance
+
+### Dashboard
+- Live metrics: total sales, order count, revenue today
+- Low stock alerts
+- Recent activity feed
+
+### Staff & Access Control
+- Role-based access: Admin and Staff
+- Admin approves new staff accounts before access is granted
+- First registered user is automatically Admin
+- Staff restricted to Register, Orders, Customers, Profile, and Settings
+- All sensitive actions protected by Supabase Row Level Security (RLS)
+
+### Audit Logs
+- Every critical action logged with timestamp and responsible staff member
+- Covers: stock overrides, refunds, voids, price changes, user approvals
+
+### Settings & Profile
+- Dark mode toggle, persisted to local storage
+- Staff profile management
+
+---
+
+## Project Structure
+
+```
 ├── src/
-│   ├── components/         # Core UI Modules
-│   │   ├── POS.tsx         # Main Register/Checkout interface
-│   │   ├── Inventory.tsx   # Product management & stock tracking
-│   │   ├── Categories.tsx  # Product categorization
-│   │   ├── Orders.tsx      # Transaction history & refunds
-│   │   ├── Customers.tsx   # Customer database management
-│   │   ├── Dashboard.tsx   # Analytics & business insights
-│   │   ├── AuditLogs.tsx   # Security & activity tracking
-│   │   └── Auth.tsx        # Login & User registration
+│   ├── components/
+│   │   ├── pos/                  # POS sub-components
+│   │   │   ├── usePOS.ts         # All register business logic
+│   │   │   ├── useCartPersistence.ts
+│   │   │   ├── useBarcodeScanner.ts
+│   │   │   ├── ProductGrid.tsx
+│   │   │   ├── ProductRow.tsx
+│   │   │   ├── OrderPanel.tsx
+│   │   │   ├── CartItem.tsx
+│   │   │   ├── OrderTotals.tsx
+│   │   │   ├── PaymentOverlay.tsx
+│   │   │   ├── CashPanel.tsx
+│   │   │   ├── CardPanel.tsx
+│   │   │   ├── MomoPanel.tsx
+│   │   │   ├── HeldOrdersDrawer.tsx
+│   │   │   └── SuccessDialog.tsx
+│   │   ├── inventory/            # Inventory sub-components
+│   │   ├── orders/               # Orders sub-components
+│   │   ├── POS.tsx               # Register page shell
+│   │   ├── Inventory.tsx
+│   │   ├── Orders.tsx
+│   │   ├── Customers.tsx
+│   │   ├── Suppliers.tsx
+│   │   ├── Categories.tsx
+│   │   ├── Reports.tsx
+│   │   ├── Dashboard.tsx
+│   │   ├── AuditLogs.tsx
+│   │   ├── Users.tsx
+│   │   ├── Profile.tsx
+│   │   ├── Settings.tsx
+│   │   ├── Auth.tsx
+│   │   └── ReceiptPrint.tsx
+│   ├── Landing/
+│   │   └── LandingPage.tsx
 │   ├── lib/
-│   │   └── supabase.ts     # Supabase client configuration
+│   │   ├── supabase.ts
+│   │   └── constants.ts          # Currency, tax rate, thresholds
 │   ├── services/
-│   │   └── auditService.ts # Centralized logging for critical actions
-│   ├── types/
-│   │   └── index.ts        # Global TypeScript interfaces
-│   ├── App.tsx             # Main layout & navigation routing
-│   └── index.css           # Global styles & Tailwind imports
-├── public/                 # Static assets
-└── supabase/               # SQL migration scripts & schema definitions
+│   │   └── auditService.ts
+│   ├── types.ts
+│   ├── App.tsx
+│   └── index.css
+├── public/
+├── vercel.json                   # SPA rewrite rule for Vercel
+└── supabase/                     # SQL migrations
 ```
 
 ---
 
-## ✨ Key Features
+## Getting Started
 
-### 1. High-Performance POS (Register)
-- **Search & Filter:** Quickly find products by name or category.
-- **Cart Management:** Add/remove items, adjust quantities, and apply discounts.
-- **Multiple Payment Methods:** Support for Cash (with change calculation), Card, and Mobile Money (MoMo).
-- **Hold Orders:** Save a cart to local storage and resume it later—perfect for busy environments.
-- **Customer Integration:** Searchable customer dropdown that automatically links orders to existing profiles or creates new ones.
-- **Receipt Preview:** Professional receipt layout ready for printing.
+### Prerequisites
+- Node.js 18+
+- A [Supabase](https://supabase.com) project
+- npm
 
-### 2. Inventory & Catalog
-- **Real-time Stock Tracking:** Stock levels decrease automatically upon sale and increase upon refund.
-- **Low Stock Alerts:** Visual indicators and dashboard widgets for items running low.
-- **Category Management:** Organize products into logical groups for faster navigation.
-- **Bulk Seeding:** One-click "Seed Sample Catalog" for testing and demonstration.
+### Installation
 
-### 3. Order Management & Refunds
-- **Full History:** Detailed view of every transaction, including items, staff member, and customer.
-- **Smart Refunds:** One-click refund process that marks the order as refunded and automatically restores items to inventory.
-- **Status Tracking:** Visual badges for 'Completed' vs 'Refunded' status.
+```bash
+# Clone the repo
+git clone https://github.com/Sloane-J/Sloane-POS.git
+cd Sloane-POS
 
-### 4. Business Intelligence (Dashboard)
-- **Live Metrics:** Real-time tracking of Total Sales, Order Count, and Customer Growth.
-- **Sales Trends:** Visual charts showing revenue performance over time.
-- **Activity Feed:** Recent transactions and stock movements at a glance.
+# Install dependencies
+npm install
 
-### 5. Security & Auditing
-- **Audit Logs:** Every critical action (stock overrides, refunds, price changes) is logged with a timestamp and the responsible staff member's name.
-- **Role-Based Access:** Integrated with Supabase Auth for secure staff logins.
-
----
-
-## ⚙️ Setup & Installation
-
-### 1. Database Schema
-Run the following SQL scripts in your Supabase SQL Editor to initialize the required tables and relationships:
-
-```sql
--- Create necessary tables
-CREATE TABLE public.categories (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE,
-    created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE public.products (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    name TEXT NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    stock_quantity INTEGER DEFAULT 0,
-    category_id UUID REFERENCES public.categories(id),
-    created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE public.customers (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT,
-    phone TEXT,
-    created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE public.orders (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id),
-    customer_id UUID REFERENCES public.customers(id),
-    customer_name TEXT,
-    total_amount DECIMAL(10,2) NOT NULL,
-    status TEXT DEFAULT 'completed',
-    created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE public.order_items (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES public.products(id),
-    quantity INTEGER NOT NULL,
-    unit_price DECIMAL(10,2) NOT NULL
-);
-
-CREATE TABLE public.audit_logs (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES public.profiles(id),
-    action TEXT NOT NULL,
-    entity_id TEXT,
-    entity_type TEXT,
-    old_value JSONB,
-    new_value JSONB,
-    metadata JSONB,
-    created_at TIMESTAMPTZ DEFAULT now()
-);
+# Set up environment variables
+cp .env.example .env
 ```
 
-### 2. Environment Variables
-Create a `.env` file with your Supabase credentials:
+Add your Supabase credentials to `.env`:
+
 ```env
-VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
+### Database Setup
+
+Run the migration scripts in `/supabase/` inside your Supabase SQL Editor in order. They set up all tables, RLS policies, indexes, and the `decrement_stock` RPC function used for atomic stock updates.
+
+### Run
+
+```bash
+# Development
+npm run dev
+
+# Production build
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+### Deploy
+
+The project is configured for Vercel. Push to your connected branch and it deploys automatically. The `vercel.json` file handles SPA routing so all routes resolve correctly.
+
 ---
 
-## 💡 Quirks & Pro-Tips
+## Environment Variables
 
-- **Mobile POS:** The POS interface has a dedicated "Mobile View" toggle. On small screens, it switches between the product grid and the cart to maximize usable space.
-- **Staff Attribution:** The system automatically links every order and audit log to the currently logged-in user's profile.
-- **Local Storage:** "Held Orders" are stored in the browser's local storage. This means they persist even if you refresh the page, but they are specific to the device being used.
-- **Stock Validation:** The POS prevents adding items to the cart if the quantity exceeds available stock, ensuring you never oversell.
-
----
-
-## 🛡 Security Rules (Firestore/Supabase)
-Ensure your RLS (Row Level Security) policies are enabled in Supabase to protect your data. By default, all tables should require authentication for write access.
+| Variable | Description |
+|---|---|
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Your Supabase anon/public key |
 
 ---
 
-## 👨‍💻 Documentation for Developers
-- **Adding a new Module:** Create a component in `src/components/`, add a corresponding icon in `App.tsx`, and update the `activeTab` state logic.
-- **Audit Logging:** Use the `auditService.logAction()` method whenever you implement a feature that modifies sensitive data (like prices or stock).
-- **Styling:** This project uses a "Brutalist-Modern" aesthetic. Use heavy font weights (`font-black`), uppercase labels, and thick borders (`border-2`) to maintain visual consistency.
+## Access & Roles
+
+| Feature | Admin | Staff |
+|---|---|---|
+| Register | ✓ | ✓ |
+| Orders | ✓ | ✓ |
+| Customers | ✓ | ✓ |
+| Profile & Settings | ✓ | ✓ |
+| Inventory | ✓ | — |
+| Categories | ✓ | — |
+| Suppliers | ✓ | — |
+| Reports | ✓ | — |
+| Dashboard | ✓ | — |
+| Audit Logs | ✓ | — |
+| Staff Management | ✓ | — |
+
+---
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|---|---|
+| `/` | Focus product search |
+| `F2` | Focus Pay button |
+| `Esc` | Close payment overlay |
+| `1` / `2` / `3` | Switch payment method (Card / Cash / MoMo) |
+| `Enter` | Confirm payment when amount is sufficient |
+| `P` | Print receipt (inside receipt modal) |
+| Arrow keys | Navigate category tabs |
+
+---
+
+## Design System
+
+Ledgr uses a brutalist-modern aesthetic:
+
+- Heavy font weights (`font-black`) for all key figures and labels
+- Uppercase tracking-widest labels throughout
+- Sharp corners — no rounded cards
+- Minimal color — primary accent only for interactive and active states
+- Dark mode first, light mode supported
+- Mobile responsive, desktop optimized
+
+---
+
+## Security
+
+- All tables protected by Supabase Row Level Security (RLS)
+- Passwords hashed by Supabase Auth (bcrypt)
+- Staff accounts require admin approval before access
+- Input sanitization before any user string reaches the database
+- Card references limited to last 4 digits — no full card numbers stored
+- Atomic stock decrements via database RPC to prevent overselling
+- Checkout protected by a hard ref-based lock to prevent double-submit race conditions
+
+---
+
+## Roadmap
+
+- [ ] Real MoMo STK push API integration (Hubtel / Paystack)
+- [ ] Multi-branch support
+- [ ] Offline mode with sync
+- [ ] Tauri desktop app (local-first, SQLite per shop)
+- [ ] Lecturer / supplier portal
+- [ ] Advanced report exports (PDF, CSV)
+- [ ] SMS receipts
+
+---
+
+## Built by
+
+**Sloane.dev** — [samuel-dorkey.vercel.app](https://samuel-dorkey.vercel.app)
+
+Live demo: [ledgr-xi.vercel.app](https://ledgr-xi.vercel.app)
