@@ -4,41 +4,46 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-   <title>Ledgr POS | Inventory & Sales Management</title>
+    <title>Ledgr — Modern Retail Management System & POSa</title>
 
     <meta
       name="description"
-      content="Ledgr POS is a modern point of sale and inventory management platform designed for retailers, wholesalers, pharmacies, supermarkets, and growing businesses. Manage sales, inventory, customers, suppliers, and analytics from one dashboard."
+      content="An all-in-one retail management system and POS built for small shops and businesses. Streamline sales, track inventory, process multi-method payments (Cash, Card, MoMo), and monitor unalterable audit logs from one dashboard."
     />
 
     <meta
       name="keywords"
-      content="POS system, point of sale software, inventory management, retail POS, barcode scanning, stock management, sales tracking, business management software, Ledgr POS"
+      content="Retail Management System, POS system, Ghana, point of sale software, inventory tracking, barcode scanning register, mobile money POS, thermal receipt printing, supermarket software, pharmacy POS, stock management, audit logging, Supabase POS"
     />
 
     <meta name="author" content="Ledgr" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#0f172a" />
 
+    <!-- Google Fonts Preconnect and Optimization Stylesheets -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Ledgr POS | Modern Point of Sale & Inventory Management" />
+    <meta property="og:title" content="Ledgr — Modern Retail Management System & POS" />
     <meta
       property="og:description"
-      content="Sell faster, track inventory in real time, manage customers and suppliers, and gain actionable business insights with Ledgr POS."
+      content="Go beyond traditional POS. Manage sales, inventory, customers, suppliers, staff, and automated end-of-day reconciliation from a single interface designed for retail."
     />
     <meta property="og:url" content="https://ledgr-xi.vercel.app" />
-    <meta property="og:site_name" content="Ledgr POS" />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:site_name" content="Ledgr RMS" />
+    <meta property="og:image" content="https://ledgr-xi.vercel.app/og-image.png" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Ledgr POS | Modern Point of Sale & Inventory Management" />
+    <meta name="twitter:title" content="Ledgr — Retail Management System" />
     <meta
       name="twitter:description"
-      content="A modern POS and inventory management platform built for businesses that need speed, reliability, and growth."
+      content="Fast, reliable, and keyboard-first retail operations management built for shops, pharmacies, and wholesalers."
     />
-    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:image" content="https://ledgr-xi.vercel.app/og-image.png" />
 
     <!-- Icons -->
     <link rel="icon" type="image/png" href="/favicon.png" />
@@ -46,19 +51,34 @@
 
     <!-- Canonical -->
     <link rel="canonical" href="https://ledgr-xi.vercel.app" />
-    <meta property="og:image" content="https://ledgr-xi.vercel.app/og-image.png" />
-<meta name="twitter:image" content="https://ledgr-xi.vercel.app/og-image.png" />
+
+    <!-- Structured Data — SoftwareApplication Schema reflecting the complete system architecture -->
     <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Ledgr POS",
-  "applicationCategory": "BusinessApplication",
-  "operatingSystem": "Web",
-  "description": "Inventory and sales management system for retail and small businesses.",
-  "url": "https://ledgr-xi.vercel.app"
-}
-</script>
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Ledgr Retail Management System",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "An all-in-one retail management system built for small shops and businesses to manage sales, inventory, customers, suppliers, staff, and unalterable audit logs.",
+      "url": "https://ledgr-xi.vercel.app",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "GHS"
+      },
+      "featureList": [
+        "Barcode scanner support and keyboard-first register shortcuts (/, F2)",
+        "Real-time stock tracking with low-stock alerts and manual overrides",
+        "Multi-method payment panels supporting Cash, Card, and Mobile Money (MoMo)",
+        "Thermal receipt printing (80mm) with itemized summaries and barcodes",
+        "Full order histories with one-click automated refunds and stock restoration",
+        "Supplier directory tracking and directory order management",
+        "Loss prevention metrics with unalterable timestamped staff audit logging",
+        "Role-based staff access tokens protected by Supabase Row Level Security (RLS)"
+      ]
+    }
+    </script>
   </head>
 
   <body>

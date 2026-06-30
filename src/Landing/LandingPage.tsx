@@ -1,21 +1,21 @@
+// src/Landing/LandingPage.tsx
 import { useEffect } from "react";
-import CTA from "./sections/CTA";
-import DashboardPreview from "./sections/DashboardPreview";
-import Features from "./sections/Features";
-import Footer from "./sections/Footer";
-import Hero from "./sections/Hero";
-import HowItWorks from "./sections/HowItWorks";
 import Navbar from "./sections/Navbar";
+import Hero from "./sections/Hero";
+import Features from "./sections/Features";
+import HowItWorks from "./sections/HowItWorks";
 import Security from "./sections/Security";
-import Stats from "./sections/Stats";
+//import Pricing from "./sections/Pricing";
+import FAQ from "./sections/FAQ";
+import CTA from "./sections/CTA";
+import Footer from "./sections/Footer";
 
-// ─── SEO meta injection ───────────────────────────────────────────────────────
-
-const SEO_TITLE = "Ledgr POS & Inventory Management — Built for Retail";
+// ─── SEO meta configuration ───────────────────────────────────────────────────
+const SEO_TITLE = "Ledgr — Modern Retail Management System & POS for Ghana";
 const SEO_DESCRIPTION =
-  "A modern, full-stack Point of Sale and Inventory Management solution built for speed and reliability. Manage sales, track stock, and monitor staff in real time.";
+  "An all-in-one retail management system and POS built for small shops and businesses in Ghana. Streamline sales, track stock, handle mobile money conversions, and monitor unalterable audit logs.";
 const SEO_URL = "https://ledgr-xi.vercel.app/";
-const SEO_IMAGE = "https://ledgr-xi.vercel.app//og-image.png";
+const SEO_IMAGE = "https://ledgr-xi.vercel.app/og-image.png";
 
 function useSEO() {
   useEffect(() => {
@@ -47,7 +47,7 @@ function useSEO() {
     setMeta("og:description", SEO_DESCRIPTION, true);
     setMeta("og:url", SEO_URL, true);
     setMeta("og:image", SEO_IMAGE, true);
-    setMeta("og:site_name", "Ledgr POS & Inventory Management System", true);
+    setMeta("og:site_name", "Ledgr Retail Management System", true);
 
     // Twitter card
     setMeta("twitter:card", "summary_large_image");
@@ -78,7 +78,7 @@ function useSEO() {
     schema.textContent = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "Ledgr POS & Inventory Management System",
+      name: "Ledgr Retail Management System & POS",
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description: SEO_DESCRIPTION,
@@ -86,23 +86,22 @@ function useSEO() {
       offers: {
         "@type": "Offer",
         price: "0",
-        priceCurrency: "GHC",
+        priceCurrency: "GHS",
       },
       featureList: [
-        "Point of Sale register",
-        "Real-time inventory tracking",
-        "Staff role management",
-        "Audit logging",
-        "Sales analytics dashboard",
-        "Refund management",
-        "Multi-payment method support",
+        "Point of Sale register with keyboard shortcuts",
+        "Real-time multi-location inventory tracking",
+        "Staff role-based access management",
+        "Loss prevention unalterable audit logging",
+        "Gross profit and sales analytics dashboards",
+        "Refund and receipt override management",
+        "Split-payment support (Cash, Card, Mobile Money)",
       ],
     });
   }, []);
 }
 
 // ─── Font loader ──────────────────────────────────────────────────────────────
-
 function useFontLoader() {
   useEffect(() => {
     const linkId = "inter-font-link";
@@ -125,47 +124,36 @@ function useFontLoader() {
     link.id = linkId;
     link.rel = "stylesheet";
     link.href =
-      "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap";
+      "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap";
     document.head.appendChild(link);
   }, []);
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
 export default function LandingPage() {
+  // Execute performance, SEO metadata, and schema injections
   useSEO();
   useFontLoader();
 
   return (
-    <div
-      className="min-h-screen bg-white"
-      style={{
-        fontFamily:
-          "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        WebkitFontSmoothing: "antialiased",
-        MozOsxFontSmoothing: "grayscale",
-      }}
-    >
-      {/* Skip to main content — accessibility */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-9999 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-clr-primary-a0) focus:text-white focus:text-sm focus:font-medium focus:outline-none"
-      >
-        Skip to main content
-      </a>
+    <div className="relative min-h-screen bg-white text-neutral-900 antialiased selection:bg-neutral-900 selection:text-white overflow-x-hidden">
+      {/* Ambient decorative lighting wrapper background */}
+      <div className="absolute inset-0 bg-[radial-gradient(84%_60%_at_50%_10%,rgba(99,102,241,0.03)_0%,rgba(255,255,255,0)_100%)] pointer-events-none" />
 
+      {/* Navigation Layer */}
       <Navbar />
 
+      {/* Main Structuring Engine */}
       <main id="main-content">
         <Hero />
-        <Stats />
         <Features />
-        <DashboardPreview />
         <HowItWorks />
         <Security />
+        {/* <Pricing /> */}
+        <FAQ />
         <CTA />
       </main>
 
+      {/* Footer Branding Closures */}
       <Footer />
     </div>
   );

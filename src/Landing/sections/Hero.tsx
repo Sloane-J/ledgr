@@ -1,168 +1,225 @@
-import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
-
-const TRUST_BADGES = [
-  "Cash, Card & MoMo payments",
-  "Real-time stock tracking",
-  "Role-based staff access",
-];
-
-// Unsplash POS/retail dashboard image — replace with actual app screenshot
-const DASHBOARD_IMG_URL =
-  "/images/admin-dashboard.jpg";
-
-const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const, delay },
-});
-
-const fadeIn = (delay = 0) => ({
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  transition: { duration: 0.6, delay },
-});
+// src/Landing/sections/Hero.tsx
+import { motion } from "framer-motion";
+import { ArrowRight, Play, Layers } from "lucide-react";
 
 export default function Hero() {
-  const reduceMotion = useReducedMotion();
-
-  const motionProps = (delay = 0) => (reduceMotion ? {} : fadeUp(delay));
-
   return (
-    <section
-      className="relative min-h-screen flex flex-col items-center justify-start pt-28 pb-0 overflow-hidden bg-white"
-      aria-labelledby="hero-heading"
-    >
-      {/* Subtle grid background */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        aria-hidden="true"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, #f0f0f0 1px, transparent 1px),
-            linear-gradient(to bottom, #f0f0f0 1px, transparent 1px)
-          `,
-          backgroundSize: "40px 40px",
-        }}
+    <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 bg-white overflow-hidden select-none">
+      {/* Decorative dashed orbit paths */}
+      <svg
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        viewBox="0 0 1200 1100"
+        fill="none"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <path
+          d="M50 250 C 300 50, 700 50, 1000 200"
+          stroke="#e5e5e5"
+          strokeWidth="1.5"
+          strokeDasharray="4 6"
+        />
+        <path
+          d="M100 600 C 400 800, 800 850, 1150 550"
+          stroke="#e5e5e5"
+          strokeWidth="1.5"
+          strokeDasharray="4 6"
+        />
+      </svg>
+
+      {/* Floating decorative dots */}
+      <motion.div
+        animate={{ y: [0, -14, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-16 left-[12%] w-3 h-3 rounded-full bg-neutral-300 hidden md:block"
       />
-      {/* Fade grid toward center */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        aria-hidden="true"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 70%, #fff 100%)",
-        }}
+      <motion.div
+        animate={{ y: [0, 12, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        className="absolute top-28 right-[8%] w-2.5 h-2.5 rounded-full bg-neutral-900 hidden md:block"
+      />
+      <motion.div
+        animate={{ y: [0, -20, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-72 left-[4%] w-20 h-20 rounded-full bg-neutral-100 hidden lg:block"
+      />
+      <motion.div
+        animate={{ y: [0, 18, 0] }}
+        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute top-[32rem] right-[3%] w-24 h-24 rounded-full bg-neutral-100 hidden lg:block"
+      />
+      <motion.div
+        animate={{ y: [0, -16, 0] }}
+        transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+        className="absolute bottom-40 left-[10%] w-16 h-16 rounded-full bg-neutral-100 hidden lg:block"
+      />
+      <motion.div
+        animate={{ y: [0, 10, 0] }}
+        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-24 right-[14%] w-2.5 h-2.5 rounded-full bg-neutral-900 hidden md:block"
       />
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-4 sm:px-6 max-w-4xl mx-auto w-full">
+      {/* Structural Minimal Grid Lines */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
-        {/* Category pill */}
-        <motion.div {...motionProps(0)} className="mb-6">
-          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-neutral-200 bg-white text-[13px] font-medium text-neutral-600 shadow-sm">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
-            POS &amp; Inventory — built for retail, cafes &amp; small shops
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col items-center text-center">
+
+        {/* Minimal Sub-Badge Tagline */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="inline-flex items-center gap-2 bg-neutral-100 border border-neutral-200/80 px-3 py-1 rounded-full mb-6"
+        >
+          <Layers className="w-3.5 h-3.5 text-neutral-900" />
+          <span className="text-[11px] font-medium tracking-wider uppercase text-neutral-600">
+            Next-Gen Retail Management Operating System
           </span>
         </motion.div>
 
-        {/* Headline */}
+        {/* Premium Massive Headline */}
         <motion.h1
-          id="hero-heading"
-          {...motionProps(0.1)}
-          className="text-4xl sm:text-5xl lg:text-[62px] font-bold tracking-tight text-neutral-900 leading-[1.1] mb-5"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+          className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-neutral-900 max-w-4xl block leading-[1.05]"
         >
-          Supercharge your sales and Inventory with Ledgr POS.{" "}
+          Go beyond traditional POS.<br />Manage your entire operation.
         </motion.h1>
 
-        {/* Subtitle */}
+        {/* Supporting Context Text */}
         <motion.p
-          {...motionProps(0.18)}
-          className="max-w-xl text-base sm:text-lg text-neutral-500 leading-relaxed mb-8"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-6 text-base sm:text-lg text-neutral-500 max-w-2xl font-normal leading-relaxed"
         >
-          A modern Point of Sale and Inventory Management system that handles sales, tracks stock in real time, and keeps your team accountable — all from one fast, reliable interface.
+          A unified system built for speed, reliability, and scale. Engineered for retailers,
+          wholesalers, pharmacies, and supermarkets to track sales, live inventory, and multi-staff accounts from one interface.
         </motion.p>
 
-        {/* CTAs */}
+        {/* Action Controls Group */}
         <motion.div
-          {...motionProps(0.26)}
-          className="flex flex-col sm:flex-row items-center gap-3 mb-8"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto px-4"
         >
           <a
-            href="/login"
-            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-neutral-900 rounded-lg hover:bg-neutral-700 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
+            href="mailto:samueldorkeyjr@gmail.com?subject=Ledgr Demo Request"
+            className="w-full sm:w-auto group inline-flex items-center justify-center gap-2 px-6 h-12 text-sm font-bold text-white bg-neutral-900 hover:bg-neutral-800 transition-all duration-150 rounded-full shadow-sm shadow-neutral-950/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
           >
-            Open the register
-            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            Request Custom Demo
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-150" />
           </a>
           <a
             href="#features"
-            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-neutral-700 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-12 text-sm font-semibold text-neutral-600 border border-neutral-200 hover:text-neutral-900 hover:bg-neutral-50 hover:border-neutral-300 transition-all duration-150 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900"
           >
-            See all features
+            <Play className="w-3.5 h-3.5 fill-current shrink-0" />
+            Explore Workflows
           </a>
         </motion.div>
 
-        {/* Trust badges */}
-        <motion.ul
-          {...motionProps(0.34)}
-          className="flex flex-wrap justify-center gap-x-5 gap-y-2 mb-12"
-          role="list"
+        {/* Big Floating Dashboard Showcase */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full max-w-6xl mt-20 sm:mt-24 relative px-2 sm:px-0"
         >
-          {TRUST_BADGES.map((badge) => (
-            <li
-              key={badge}
-              className="flex items-center gap-1.5 text-xs text-neutral-500 font-medium"
-            >
-              <CheckCircle2
-                className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0"
-                aria-hidden="true"
-              />
-              {badge}
-            </li>
-          ))}
-        </motion.ul>
-      </div>
+          {/* Floating customer avatar cards around the image */}
+          <motion.div
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="hidden md:flex absolute -left-6 lg:-left-12 top-14 items-center gap-3 bg-white border border-neutral-200 shadow-[0_12px_30px_rgba(0,0,0,0.08)] rounded-xl px-3 py-2.5 z-20"
+          >
+            <img
+              src="https://i.pravatar.cc/80?img=12"
+              alt="Customer"
+              className="w-9 h-9 rounded-full object-cover"
+            />
+            <div className="text-left">
+              <div className="text-xs font-bold text-neutral-900 leading-tight">Akosua Boateng</div>
+              <div className="text-[10px] text-neutral-500 leading-tight">Owner, Boateng Mart</div>
+            </div>
+          </motion.div>
 
-      {/* Dashboard mockup */}
-      <motion.div
-        {...(reduceMotion ? {} : fadeIn(0.45))}
-        className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6"
-      >
-        {/* Browser chrome */}
-        <div className="rounded-t-xl border border-b-0 border-neutral-200 bg-neutral-100 px-4 pt-3 pb-0 shadow-[0_-4px_24px_-4px_rgba(0,0,0,0.08)]">
-          <div className="flex items-center gap-1.5 mb-3" aria-hidden="true">
-            <span className="w-3 h-3 rounded-full bg-red-400 block" />
-            <span className="w-3 h-3 rounded-full bg-yellow-400 block" />
-            <span className="w-3 h-3 rounded-full bg-green-400 block" />
-            <div className="flex-1 ml-3 mr-1 h-5 rounded bg-white border border-neutral-200 flex items-center px-2">
-              <span className="text-[10px] text-neutral-400 truncate">
-                ledgr.app/register
-              </span>
+          <motion.div
+            animate={{ y: [0, 14, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+            className="hidden md:flex absolute -right-4 lg:-right-10 top-1/3 items-center gap-3 bg-white border border-neutral-200 shadow-[0_12px_30px_rgba(0,0,0,0.08)] rounded-xl px-3 py-2.5 z-20"
+          >
+            <img
+              src="https://i.pravatar.cc/80?img=33"
+              alt="Customer"
+              className="w-9 h-9 rounded-full object-cover"
+            />
+            <div className="text-left">
+              <div className="text-xs font-bold text-neutral-900 leading-tight">Kwame Asante</div>
+              <div className="text-[10px] text-neutral-500 leading-tight">Manager, Asante Wholesale</div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            animate={{ y: [0, -12, 0] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            className="hidden lg:flex absolute -left-4 bottom-16 items-center gap-3 bg-white border border-neutral-200 shadow-[0_12px_30px_rgba(0,0,0,0.08)] rounded-xl px-3 py-2.5 z-20"
+          >
+            <img
+              src="https://i.pravatar.cc/80?img=47"
+              alt="Customer"
+              className="w-9 h-9 rounded-full object-cover"
+            />
+            <div className="text-left">
+              <div className="text-xs font-bold text-neutral-900 leading-tight">Efua Mensah</div>
+              <div className="text-[10px] text-neutral-500 leading-tight">Pharmacist, Mensah Pharmacy</div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+            className="hidden lg:flex absolute -right-6 bottom-28 items-center gap-3 bg-white border border-neutral-200 shadow-[0_12px_30px_rgba(0,0,0,0.08)] rounded-xl px-3 py-2.5 z-20"
+          >
+            <img
+              src="https://i.pravatar.cc/80?img=56"
+              alt="Customer"
+              className="w-9 h-9 rounded-full object-cover"
+            />
+            <div className="text-left">
+              <div className="text-xs font-bold text-neutral-900 leading-tight">David Owusu</div>
+              <div className="text-[10px] text-neutral-500 leading-tight">CEO, Owusu Retail Group</div>
+            </div>
+          </motion.div>
+
+          {/* Subtle Outer Border Frame Wrap - real product photo, tall showcase */}
+          <div className="relative bg-white border border-neutral-300/90 rounded-2xl shadow-[0_30px_90px_rgba(0,0,0,0.1)] p-2 sm:p-3 overflow-hidden">
+
+            {/* Top Minimal Browser Window Bar Actions */}
+            <div className="h-7 w-full flex items-center justify-between px-3 border-b border-neutral-100 mb-2 sm:mb-3">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
+                <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
+                <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
+              </div>
+              <div className="bg-neutral-50 px-6 py-0.5 border border-neutral-200/60 rounded text-[10px] font-medium tracking-tight text-neutral-400 select-none">
+                ledgr-xi.vercel.app/dashboard
+              </div>
+              <div className="w-10" />
+            </div>
+
+            <div className="w-full rounded-xl overflow-hidden border border-neutral-200 bg-neutral-50">
+              <img
+                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=2400&q=80"
+                alt="Ledgr POS dashboard showing live sales, inventory, and transaction data"
+                className="w-full h-[480px] sm:h-[600px] lg:h-[720px] object-cover"
+                loading="eager"
+              />
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Screenshot */}
-        <div className="relative overflow-hidden rounded-b-xl border border-neutral-200 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)]">
-          <img
-            src={DASHBOARD_IMG_URL}
-            alt="Ledgr POS interface showing the sales register and inventory dashboard — replace with actual app screenshot"
-            className="w-full object-cover object-top"
-            style={{ maxHeight: "480px" }}
-            loading="eager"
-            decoding="async"
-          />
-          {/* Bottom fade into white */}
-          <div
-            className="pointer-events-none absolute bottom-0 inset-x-0 h-24"
-            aria-hidden="true"
-            style={{
-              background: "linear-gradient(to top, #fff 0%, transparent 100%)",
-            }}
-          />
-        </div>
-      </motion.div>
+      </div>
     </section>
   );
 }

@@ -31,37 +31,35 @@ export function POS() {
       {/* ── Payment overlay — rendered outside normal flow ── */}
       {pos.isPaymentOpen && (
         <PaymentOverlay
-          total={pos.total}
-          paymentMethod={pos.paymentMethod}
-          cashReceived={pos.cashReceived}
-          changeDue={pos.changeDue}
-          isCashEnough={pos.isCashEnough}
-          isCheckingOut={pos.isCheckingOut}
-          quickCashAmounts={pos.quickCashAmounts}
-          momoNetwork={pos.momoNetwork}
-          momoNumber={pos.momoNumber}
-          momoStatus={pos.momoStatus}
-          isValidMomoNumber={pos.isValidMomoNumber}
-          cashInputRef={pos.cashInputRef}
-          onClose={() => pos.setIsPaymentOpen(false)}
-          onPaymentMethodChange={pos.setPaymentMethod}
-          onNumpadInput={pos.handleNumpadInput}
-          onMomoNetworkChange={pos.setMomoNetwork}
-          onMomoNumberChange={pos.setMomoNumber}
-          onCashConfirm={pos.handleCheckout}
-          onCardConfirm={pos.handleCheckout}
-          onMomoConfirm={(type) => pos.handleMomoCheckout(type)}
-          cart={pos.cart}
-subtotal={pos.subtotal}
-discount={pos.discount}
-discountAmount={pos.discountAmount}
-tax={pos.tax}
-customerName={pos.customerName}
-momoNumber={pos.momoNumber}
-cardReference={pos.cardReference}
-onMomoNumberChange={pos.setMomoNumber}
-onCardReferenceChange={pos.setCardReference}
-        />
+  total={pos.total}
+  paymentMethod={pos.paymentMethod}
+  cashReceived={pos.cashReceived}
+  changeDue={pos.changeDue}
+  isCashEnough={pos.isCashEnough}
+  isCheckingOut={pos.isCheckingOut}
+  quickCashAmounts={pos.quickCashAmounts}
+  momoNetwork={pos.momoNetwork}
+  momoNumber={pos.momoNumber}
+  momoStatus={pos.momoStatus}
+  isValidMomoNumber={pos.isValidMomoNumber}
+  cashInputRef={pos.cashInputRef}
+  onClose={() => pos.setIsPaymentOpen(false)}
+  onPaymentMethodChange={pos.setPaymentMethod}
+  onNumpadInput={pos.handleNumpadInput}
+  onMomoNetworkChange={pos.setMomoNetwork}
+  onMomoNumberChange={pos.setMomoNumber}
+  onCashConfirm={pos.handleCheckout}
+  onCardConfirm={pos.handleCheckout}
+  onMomoConfirm={(type) => pos.handleMomoCheckout(type)}
+  cart={pos.cart}
+  subtotal={pos.subtotal}
+  discount={pos.discount}
+  discountAmount={pos.discountAmount}
+  tax={pos.tax}
+  customerName={pos.customerName}
+  cardReference={pos.cardReference}
+  onCardReferenceChange={pos.setCardReference}
+/>
       )}
 
       {/* ── Mobile tab bar ── */}
