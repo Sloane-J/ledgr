@@ -210,7 +210,7 @@ export default function Hero() {
 
             <div className="w-full rounded-xl overflow-hidden border border-neutral-200 bg-neutral-50">
               <img
-                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=2400&q=80"
+                src="/images/admin-dashboard.webp"
                 alt="Ledgr POS dashboard showing live sales, inventory, and transaction data"
                 className="w-full h-[480px] sm:h-[600px] lg:h-[720px] object-cover"
                 loading="eager"
