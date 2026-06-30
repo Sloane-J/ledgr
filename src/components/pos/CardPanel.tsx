@@ -1,60 +1,103 @@
 // src/components/pos/CardPanel.tsx
 import * as React from 'react';
 import { CreditCard, CheckCircle2 } from 'lucide-react';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
 import { formatCurrency } from '@/src/lib/constants';
 import { cn } from '@/lib/utils';
 
 interface CardPanelProps {
   total: number;
+  cashReceived: string;
+  changeDue: number;
+  isCashEnough: boolean;
   isCheckingOut: boolean;
+  cardReference: string;
+  onCardReferenceChange: (ref: string) => void;
   onConfirm: () => void;
 }
 
-export function CardPanel({ total, isCheckingOut, onConfirm }: CardPanelProps) {
+export function CardPanel({
+  total,
+  isCashEnough,
+  isCheckingOut,
+  cardReference,
+  onCardReferenceChange,
+  onConfirm,
+}: CardPanelProps) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 py-8">
+    <div className="flex flex-col h-full gap-6">
 
-      {/* Terminal icon */}
-      <div className="w-24 h-24 border-2 border-primary/30 bg-primary/5 flex items-center justify-center text-primary">
-        <CreditCard
-          className="h-12 w-12"
-          aria-hidden="true"
-        />
+      {/* Icon + instruction */}
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 border border-primary/20 bg-primary/5 flex items-center justify-center text-primary shrink-0">
+          <CreditCard className="h-6 w-6" aria-hidden="true" />
+        </div>
+        <div>
+          <p className="text-sm font-black uppercase tracking-tight">Card Payment</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Ask customer to insert, swipe, or tap on the terminal.
+          </p>
+        </div>
       </div>
 
-      {/* Instructions */}
-      <div>
-        <p className="text-xl font-black uppercase tracking-tight mb-1">
-          Waiting for Payment
+      {/* Total */}
+      <div className="border border-border bg-muted/20 px-4 py-3">
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+          Total to charge
         </p>
-        <p className="text-sm text-muted-foreground max-w-xs">
-          Ask the customer to insert, swipe, or tap their card on the terminal.
-        </p>
-        <p className="text-2xl font-black text-primary mt-3 tabular-nums">
+        <p className="text-3xl font-black tabular-nums text-primary">
           {formatCurrency(total)}
         </p>
       </div>
 
-      {/* Confirm button — cashier presses this once terminal approves */}
+      {/* Optional reference */}
+      <div>
+        <Label
+          htmlFor="card-reference"
+          className="text-[10px] uppercase tracking-widest text-muted-foreground"
+        >
+          Last 4 digits / Reference
+          <span className="ml-2 normal-case tracking-normal text-muted-foreground/50">
+            (optional)
+          </span>
+        </Label>
+        <Input
+          id="card-reference"
+          placeholder="e.g. 4242 or TXN-001"
+          value={cardReference}
+          onChange={e => onCardReferenceChange(e.target.value)}
+          maxLength={20}
+          className="mt-1.5 h-10 bg-background border-border font-mono"
+          aria-describedby="card-reference-hint"
+        />
+        <p
+          id="card-reference-hint"
+          className="text-[10px] text-muted-foreground mt-1"
+        >
+          Never enter full card numbers. Last 4 digits or transaction reference only.
+        </p>
+      </div>
+
+      <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+        Confirm only after terminal approves · Enter
+      </p>
+
       <button
+        disabled={!isCashEnough || isCheckingOut}
         onClick={onConfirm}
-        disabled={isCheckingOut}
         aria-label="Confirm card payment received"
         className={cn(
-          'h-12 px-10 text-xs font-black uppercase tracking-widest transition-all',
-          'border-2 border-primary/30',
-          'hover:bg-primary hover:text-white hover:border-primary',
+          'mt-auto w-full h-14 font-black text-sm uppercase tracking-widest transition-colors',
+          'bg-primary text-primary-foreground hover:bg-primary/90',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
           'disabled:opacity-40 disabled:cursor-not-allowed',
-          'flex items-center gap-2'
+          'flex items-center justify-center gap-2'
         )}
       >
         {isCheckingOut ? (
           <>
-            <div
-              className="h-3.5 w-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin"
-              aria-hidden="true"
-            />
+            <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
             Processing…
           </>
         ) : (
@@ -64,10 +107,6 @@ export function CardPanel({ total, isCheckingOut, onConfirm }: CardPanelProps) {
           </>
         )}
       </button>
-
-      <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-        Only confirm after terminal approves
-      </p>
     </div>
   );
 }

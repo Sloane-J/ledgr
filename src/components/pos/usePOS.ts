@@ -12,7 +12,7 @@ import {
 
 export type PaymentMethod = 'cash' | 'card' | 'momo';
 export type MomoNetwork = 'mtn' | 'vodafone' | 'airteltigo';
-export type MomoStatus = 'idle' | 'sending' | 'waiting' | 'confirmed';
+export type MomoStatus = 'idle' | 'sending' | 'waiting' | 'confirmed' | 'pay_to_account';
 
 export interface PaymentInfo {
   method: PaymentMethod;
@@ -62,6 +62,7 @@ export function usePOS() {
   const [cashReceived, setCashReceived] = useState('');
   const [momoNetwork, setMomoNetwork] = useState<MomoNetwork>('mtn');
   const [momoNumber, setMomoNumber] = useState('');
+  const [cardReference, setCardReference] = useState('');
   const [momoStatus, setMomoStatus] = useState<MomoStatus>('idle');
 
   // ── UI state ──
@@ -225,6 +226,7 @@ export function usePOS() {
     setCustomerName('');
     setSelectedCustomerId(null);
     clearCartSession();
+    setCardReference('');
   }, []);
 
   // ── Numpad ──
@@ -259,19 +261,21 @@ export function usePOS() {
   const isValidMomoNumber = (num: string) => /^0[235]\d{8}$/.test(num.replace(/\s/g, ''));
 
   // ── MoMo simulation — TODO: replace with real API ──
-  const handleMomoCheckout = async () => {
-    if (!isValidMomoNumber(momoNumber)) {
-      toast.error('Enter a valid Ghana phone number (e.g. 024 000 0000)');
-      return;
-    }
-    setMomoStatus('sending');
-    await new Promise(r => setTimeout(r, 1500));
-    setMomoStatus('waiting');
-    await new Promise(r => setTimeout(r, 3000));
-    setMomoStatus('confirmed');
-    await new Promise(r => setTimeout(r, 800));
+  const handleMomoCheckout = async (type: 'prompt' | 'pay_to_account') => {
+  if (type === 'pay_to_account') {
+    setMomoStatus('pay_to_account');
     await handleCheckout();
-  };
+    return;
+  }
+  // Send prompt simulation — TODO: replace with real STK push API
+  setMomoStatus('sending');
+  await new Promise(r => setTimeout(r, 1500));
+  setMomoStatus('waiting');
+  await new Promise(r => setTimeout(r, 3000));
+  setMomoStatus('confirmed');
+  await new Promise(r => setTimeout(r, 800));
+  await handleCheckout();
+};
 
   // ── Resolve or create customer ──
   const resolveCustomer = async (name: string, id: string | null) => {
@@ -500,6 +504,7 @@ export function usePOS() {
     cashReceived, setCashReceived,
     momoNetwork, setMomoNetwork,
     momoNumber, setMomoNumber,
+    cardReference, setCardReference,
     momoStatus,
     isCheckingOut,
     handleNumpadInput,

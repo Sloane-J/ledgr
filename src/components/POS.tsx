@@ -50,7 +50,17 @@ export function POS() {
           onMomoNumberChange={pos.setMomoNumber}
           onCashConfirm={pos.handleCheckout}
           onCardConfirm={pos.handleCheckout}
-          onMomoConfirm={pos.handleMomoCheckout}
+          onMomoConfirm={(type) => pos.handleMomoCheckout(type)}
+          cart={pos.cart}
+subtotal={pos.subtotal}
+discount={pos.discount}
+discountAmount={pos.discountAmount}
+tax={pos.tax}
+customerName={pos.customerName}
+momoNumber={pos.momoNumber}
+cardReference={pos.cardReference}
+onMomoNumberChange={pos.setMomoNumber}
+onCardReferenceChange={pos.setCardReference}
         />
       )}
 

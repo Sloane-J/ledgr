@@ -1,111 +1,93 @@
 // src/components/pos/MomoPanel.tsx
 import * as React from 'react';
-import { Smartphone, CheckCircle2, Loader2 } from 'lucide-react';
+import { Smartphone, CheckCircle2, Loader2, UserCheck } from 'lucide-react';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { formatCurrency } from '@/src/lib/constants';
-import { MomoNetwork, MomoStatus } from './usePOS';
+import { MomoStatus } from './usePOS';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-
-const NETWORKS: { id: MomoNetwork; name: string; color: string; textColor: string }[] = [
-  { id: 'mtn',       name: 'MTN MoMo',   color: '#FFCC00', textColor: '#000000' },
-  { id: 'vodafone',  name: 'Telecel',    color: '#E60000', textColor: '#FFFFFF' },
-  { id: 'airteltigo',name: 'AirtelTigo', color: '#0055A4', textColor: '#FFFFFF' },
-];
 
 interface MomoPanelProps {
   total: number;
-  momoNetwork: MomoNetwork;
-  momoNumber: string;
+  cashReceived: string;
+  changeDue: number;
+  isCashEnough: boolean;
   momoStatus: MomoStatus;
+  momoNumber: string;
   isCheckingOut: boolean;
-  isValidMomoNumber: (num: string) => boolean;
-  onNetworkChange: (network: MomoNetwork) => void;
-  onNumberChange: (number: string) => void;
-  onConfirm: () => void;
+  onMomoNumberChange: (number: string) => void;
+  onConfirm: (type: 'prompt' | 'pay_to_account') => void;
 }
 
 export function MomoPanel({
   total,
-  momoNetwork,
-  momoNumber,
+  isCashEnough,
   momoStatus,
+  momoNumber,
   isCheckingOut,
-  isValidMomoNumber,
-  onNetworkChange,
-  onNumberChange,
+  onMomoNumberChange,
   onConfirm,
 }: MomoPanelProps) {
   const isProcessing = momoStatus !== 'idle' || isCheckingOut;
-  const isNumberValid = isValidMomoNumber(momoNumber);
 
-  const statusMessage = {
-    idle: null,
-    sending: 'Sending payment prompt…',
+  const statusMessage: Partial<Record<MomoStatus, string>> = {
+    sending: 'Sending payment prompt to customer…',
     waiting: 'Waiting for customer to approve…',
     confirmed: 'Payment confirmed. Saving order…',
-  }[momoStatus];
+    pay_to_account: 'Processing payment…',
+  };
+
+  const handleSendPrompt = () => {
+    if (!momoNumber.trim()) {
+      toast.warning('No phone number entered. The prompt will not be sent to a customer phone.', {
+        action: {
+          label: 'Proceed anyway',
+          onClick: () => onConfirm('prompt'),
+        },
+        duration: 5000,
+      });
+      return;
+    }
+    onConfirm('prompt');
+  };
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col h-full gap-5">
 
-      {/* Amount */}
-      <div className="text-center py-3">
+      {/* Icon + label */}
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 border border-primary/20 bg-primary/5 flex items-center justify-center text-primary shrink-0">
+          <Smartphone className="h-6 w-6" aria-hidden="true" />
+        </div>
+        <div>
+          <p className="text-sm font-black uppercase tracking-tight">Mobile Money</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Send a prompt or confirm after payment to account.
+          </p>
+        </div>
+      </div>
+
+      {/* Total */}
+      <div className="border border-border bg-muted/20 px-4 py-3">
         <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
-          Amount
+          Total to collect
         </p>
         <p className="text-3xl font-black tabular-nums text-primary">
           {formatCurrency(total)}
         </p>
       </div>
 
-      {/* Network selector */}
-      <div>
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-          Network
-        </p>
-        <div
-          className="grid grid-cols-3 gap-2"
-          role="radiogroup"
-          aria-label="Mobile money network"
-        >
-          {NETWORKS.map(net => {
-            const isSelected = momoNetwork === net.id;
-            return (
-              <button
-                key={net.id}
-                role="radio"
-                aria-checked={isSelected}
-                onClick={() => onNetworkChange(net.id)}
-                disabled={isProcessing}
-                className={cn(
-                  'h-14 text-[10px] font-black uppercase tracking-widest border-2 transition-all',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
-                  'disabled:opacity-50 disabled:cursor-not-allowed',
-                  isSelected
-                    ? 'scale-[1.03] shadow-md'
-                    : 'border-border bg-background text-muted-foreground hover:border-primary/40'
-                )}
-                style={
-                  isSelected
-                    ? { backgroundColor: net.color, color: net.textColor, borderColor: net.color }
-                    : {}
-                }
-              >
-                {net.name}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Phone number input */}
+      {/* Optional phone number */}
       <div>
         <Label
           htmlFor="momo-number"
           className="text-[10px] uppercase tracking-widest text-muted-foreground"
         >
-          Phone Number
+          Customer Phone Number
+          <span className="ml-2 normal-case tracking-normal text-muted-foreground/50">
+            (optional)
+          </span>
         </Label>
         <Input
           id="momo-number"
@@ -113,35 +95,22 @@ export function MomoPanel({
           inputMode="numeric"
           placeholder="024 000 0000"
           value={momoNumber}
-          onChange={e => onNumberChange(e.target.value)}
+          onChange={e => onMomoNumberChange(e.target.value)}
           disabled={isProcessing}
-          aria-describedby="momo-number-hint"
-          aria-invalid={momoNumber.length > 0 && !isNumberValid}
           maxLength={13}
-          className={cn(
-            'mt-1.5 h-12 text-center text-xl font-black font-mono tracking-widest',
-            'border-border focus:border-primary',
-            momoNumber.length > 0 && !isNumberValid && 'border-destructive focus:border-destructive'
-          )}
+          className="mt-1.5 h-10 bg-background border-border font-mono tracking-widest"
+          aria-describedby="momo-number-hint"
         />
         <p
           id="momo-number-hint"
-          className={cn(
-            'text-[10px] mt-1',
-            momoNumber.length > 0 && !isNumberValid
-              ? 'text-destructive'
-              : 'text-muted-foreground'
-          )}
+          className="text-[10px] text-muted-foreground mt-1"
         >
-          {momoNumber.length > 0 && !isNumberValid
-            ? 'Enter a valid Ghana number starting with 024, 025, 054, 055, 059…'
-            : 'Ghana mobile number (MTN, Telecel, AirtelTigo)'
-          }
+          Required only for Send Prompt. Pay to Account works without it.
         </p>
       </div>
 
-      {/* Status indicator */}
-      {momoStatus !== 'idle' && (
+      {/* Status */}
+      {momoStatus !== 'idle' && statusMessage[momoStatus] && (
         <div
           role="status"
           aria-live="polite"
@@ -157,35 +126,66 @@ export function MomoPanel({
           ) : (
             <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
           )}
-          <p className="text-xs font-semibold">{statusMessage}</p>
+          <p className="text-xs font-semibold">{statusMessage[momoStatus]}</p>
         </div>
       )}
 
-      {/* Send prompt button */}
-      <button
-        onClick={onConfirm}
-        disabled={isProcessing || !isNumberValid}
-        aria-label="Send mobile money payment prompt to customer"
-        className={cn(
-          'w-full h-14 font-black text-sm uppercase tracking-widest transition-colors',
-          'bg-primary text-primary-foreground hover:bg-primary/90',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-          'disabled:opacity-40 disabled:cursor-not-allowed',
-          'flex items-center justify-center gap-2'
-        )}
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            {momoStatus === 'confirmed' ? 'Confirming…' : 'Processing…'}
-          </>
-        ) : (
-          <>
-            <Smartphone className="h-4 w-4" aria-hidden="true" />
-            Send Payment Prompt
-          </>
-        )}
-      </button>
+      {/* Action buttons */}
+      <div className="mt-auto space-y-3">
+        <button
+          onClick={handleSendPrompt}
+          disabled={isProcessing || !isCashEnough}
+          aria-label="Send mobile money prompt to customer phone"
+          className={cn(
+            'w-full h-14 font-black text-sm uppercase tracking-widest transition-colors',
+            'bg-primary text-primary-foreground hover:bg-primary/90',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+            'disabled:opacity-40 disabled:cursor-not-allowed',
+            'flex items-center justify-center gap-2'
+          )}
+        >
+          {isProcessing && momoStatus !== 'pay_to_account' ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              {momoStatus === 'confirmed' ? 'Confirming…' : 'Processing…'}
+            </>
+          ) : (
+            <>
+              <Smartphone className="h-4 w-4" aria-hidden="true" />
+              Send Prompt
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={() => onConfirm('pay_to_account')}
+          disabled={isProcessing || !isCashEnough}
+          aria-label="Customer already paid to agent account"
+          className={cn(
+            'w-full h-14 font-black text-sm uppercase tracking-widest transition-colors',
+            'border-2 border-border hover:border-primary hover:text-primary hover:bg-primary/5',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+            'disabled:opacity-40 disabled:cursor-not-allowed',
+            'flex items-center justify-center gap-2'
+          )}
+        >
+          {isProcessing && momoStatus === 'pay_to_account' ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              Processing…
+            </>
+          ) : (
+            <>
+              <UserCheck className="h-4 w-4" aria-hidden="true" />
+              Pay to Account
+            </>
+          )}
+        </button>
+
+        <p className="text-[10px] text-muted-foreground text-center uppercase tracking-widest">
+          Confirm only after payment is received
+        </p>
+      </div>
     </div>
   );
 }

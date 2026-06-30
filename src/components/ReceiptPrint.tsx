@@ -1,10 +1,12 @@
 // src/components/ReceiptPrint.tsx
 import * as React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { X, Printer, CheckCircle2 } from 'lucide-react';
 import { CartItem } from '@/src/types';
 import { TAX_RATE, CURRENCY_SYMBOL, formatCurrency } from '@/src/lib/constants';
+import { Button } from '@/src/components/ui/button';
+import { cn } from '@/lib/utils';
 
-// Matches PaymentInfo from usePOS.ts exactly
 interface ReceiptPaymentInfo {
   method: string;
   change: number;
@@ -29,9 +31,9 @@ interface ReceiptPrintProps {
 const PRINT_STYLES = `
 @media print {
   body * { visibility: hidden !important; }
-  #receipt-print,
-  #receipt-print * { visibility: visible !important; }
-  #receipt-print {
+  #receipt-printout,
+  #receipt-printout * { visibility: visible !important; }
+  #receipt-printout {
     display: block !important;
     position: fixed !important;
     top: 0;
@@ -39,7 +41,7 @@ const PRINT_STYLES = `
     font-family: 'Courier New', Courier, monospace;
     font-size: 11px;
     width: 76mm;
-    padding: 4mm 4mm;
+    padding: 4mm;
     color: #000 !important;
     background: #fff !important;
     -webkit-print-color-adjust: exact;
@@ -52,21 +54,17 @@ const PRINT_STYLES = `
 }
 `;
 
-// ── Sub-components ────────────────────────────────────────
-
-function Row({
+function PrintRow({
   label,
   value,
   bold,
   large,
-  indent,
   muted,
 }: {
   label: string;
   value: string;
   bold?: boolean;
   large?: boolean;
-  indent?: boolean;
   muted?: boolean;
 }) {
   return (
@@ -74,16 +72,15 @@ function Row({
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'baseline',
-      marginBottom: '2px',
+      marginBottom: '3px',
       fontWeight: bold ? 'bold' : 'normal',
       fontSize: large ? '13px' : '11px',
-      color: muted ? '#555' : '#000',
-      paddingLeft: indent ? '8px' : '0',
+      color: muted ? '#666' : '#000',
     }}>
       <span style={{ whiteSpace: 'nowrap', marginRight: '4px' }}>{label}</span>
       <span style={{
         flex: 1,
-        borderBottom: '1px dotted #bbb',
+        borderBottom: '1px dotted #ccc',
         margin: '0 4px',
         minWidth: '12px',
         height: '1em',
@@ -95,28 +92,24 @@ function Row({
   );
 }
 
-function Divider({ type = 'dashed' }: { type?: 'solid' | 'dashed' | 'thick' }) {
+function PrintDivider({ thick }: { thick?: boolean }) {
   return (
     <div style={{
-      borderTop: type === 'thick'
-        ? '2px solid #000'
-        : type === 'solid'
-        ? '1px solid #000'
-        : '1px dashed #aaa',
+      borderTop: thick ? '2px solid #000' : '1px dashed #bbb',
       margin: '6px 0',
     }} />
   );
 }
 
-function SectionLabel({ children }: { children: string }) {
+function PrintSection({ children }: { children: string }) {
   return (
     <div style={{
       fontSize: '8px',
       letterSpacing: '2px',
-      textTransform: 'uppercase',
+      textTransform: 'uppercase' as const,
       fontWeight: 'bold',
-      color: '#444',
-      marginBottom: '4px',
+      color: '#555',
+      marginBottom: '5px',
       marginTop: '2px',
     }}>
       {children}
@@ -124,23 +117,20 @@ function SectionLabel({ children }: { children: string }) {
   );
 }
 
-// Simple barcode-style graphic using unicode blocks
 function Barcode({ value }: { value: string }) {
-  // Deterministic bar pattern derived from order ID characters
   const pattern = value
     .split('')
     .map(c => c.charCodeAt(0))
-    .map(n => (n % 4 === 0 ? '██' : n % 3 === 0 ? '█ ' : n % 2 === 0 ? '███' : '█'))
+    .map(n => n % 4 === 0 ? '██' : n % 3 === 0 ? '█ ' : n % 2 === 0 ? '███' : '█')
     .join('');
 
   return (
     <div style={{ textAlign: 'center', margin: '8px 0 4px' }}>
       <div style={{
-        fontSize: '22px',
+        fontSize: '20px',
         lineHeight: '1',
         fontFamily: 'monospace',
         letterSpacing: '1px',
-        color: '#000',
         overflow: 'hidden',
         whiteSpace: 'nowrap',
       }}>
@@ -151,7 +141,6 @@ function Barcode({ value }: { value: string }) {
         letterSpacing: '4px',
         marginTop: '3px',
         fontWeight: 'bold',
-        color: '#000',
       }}>
         {value}
       </div>
@@ -159,7 +148,17 @@ function Barcode({ value }: { value: string }) {
   );
 }
 
-// ── Main component ────────────────────────────────────────
+const METHOD_LABELS: Record<string, string> = {
+  cash: 'Cash',
+  card: 'Card',
+  momo: 'Mobile Money',
+};
+
+const NETWORK_LABELS: Record<string, string> = {
+  mtn: 'MTN MoMo',
+  vodafone: 'Telecel Cash',
+  airteltigo: 'AirtelTigo Money',
+};
 
 export function ReceiptPrint({
   lastOrderId,
@@ -167,9 +166,11 @@ export function ReceiptPrint({
   shouldPrint,
   onPrintDone,
 }: ReceiptPrintProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const hasPrinted = useRef(false);
+  const printButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Inject print styles once
+  // Inject thermal print styles
   useEffect(() => {
     const id = 'receipt-print-styles';
     if (!document.getElementById(id)) {
@@ -178,25 +179,54 @@ export function ReceiptPrint({
       style.textContent = PRINT_STYLES;
       document.head.appendChild(style);
     }
-    return () => {
-      document.getElementById('receipt-print-styles')?.remove();
-    };
+    return () => { document.getElementById(id)?.remove(); };
   }, []);
 
-  // Trigger print
+  // Open modal when shouldPrint fires
   useEffect(() => {
-    if (shouldPrint && paymentInfo && !hasPrinted.current) {
-      hasPrinted.current = true;
-      const timer = setTimeout(() => {
-        window.print();
-        onPrintDone();
-        hasPrinted.current = false;
-      }, 150);
-      return () => clearTimeout(timer);
+    if (shouldPrint && paymentInfo) {
+      setIsModalOpen(true);
     }
-  }, [shouldPrint, paymentInfo, onPrintDone]);
+  }, [shouldPrint, paymentInfo]);
 
-  if (!paymentInfo) return null;
+  // Focus print button when modal opens
+  useEffect(() => {
+    if (isModalOpen) {
+      setTimeout(() => printButtonRef.current?.focus(), 80);
+    }
+  }, [isModalOpen]);
+
+  // Close modal and signal done
+  const handleClose = () => {
+    setIsModalOpen(false);
+    onPrintDone();
+    hasPrinted.current = false;
+  };
+
+  // Trigger thermal print
+  const handlePrint = () => {
+    if (hasPrinted.current) return;
+    hasPrinted.current = true;
+    setTimeout(() => {
+      window.print();
+      hasPrinted.current = false;
+    }, 100);
+  };
+
+  // Keyboard: Escape closes, P or Enter triggers print
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { handleClose(); return; }
+      if ((e.key === 'p' || e.key === 'P') && !e.ctrlKey && !e.metaKey) {
+        handlePrint();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isModalOpen]);
+
+  if (!paymentInfo || !isModalOpen) return null;
 
   const orderId = lastOrderId?.slice(-6).toUpperCase() ?? '------';
   const now = new Date();
@@ -207,170 +237,269 @@ export function ReceiptPrint({
     hour: '2-digit', minute: '2-digit',
   });
 
-  const methodLabel: Record<string, string> = {
-    cash: 'Cash',
-    card: 'Card',
-    momo: 'Mobile Money',
-  };
-
-  const networkLabel: Record<string, string> = {
-    mtn: 'MTN MoMo',
-    vodafone: 'Telecel Cash',
-    airteltigo: 'AirtelTigo Money',
-  };
-
   return (
-    <div id="receipt-print" style={{ display: 'none' }}>
+    <>
+      {/* ── MODAL OVERLAY ── */}
+      <div
+        className="fixed inset-0 z-[300] flex items-center justify-center"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Receipt"
+      >
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-black/70"
+          onClick={handleClose}
+          aria-hidden="true"
+        />
 
-      {/* ── HEADER ── */}
-      <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-        <div style={{
-          fontSize: '22px',
-          fontWeight: 'bold',
-          letterSpacing: '6px',
-          textTransform: 'uppercase',
-          lineHeight: '1',
-        }}>
-          LEDGR
-        </div>
-        <div style={{
-          fontSize: '8px',
-          letterSpacing: '3px',
-          textTransform: 'uppercase',
-          color: '#555',
-          marginTop: '3px',
-        }}>
-          Point of Sale Receipt
+        {/* Modal */}
+        <div className="relative z-10 w-[90vw] max-w-md max-h-[90vh] flex flex-col bg-card border border-border shadow-2xl">
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
+            <div>
+              <h2 className="font-black text-base uppercase tracking-widest">Receipt</h2>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Order #{orderId} · {paymentInfo.method.toUpperCase()}
+              </p>
+            </div>
+            <button
+              onClick={handleClose}
+              aria-label="Close receipt"
+              className={cn(
+                'w-8 h-8 flex items-center justify-center border border-border',
+                'text-muted-foreground hover:text-foreground hover:bg-muted transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
+              )}
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          {/* Receipt body — scrollable */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 font-mono text-sm">
+
+            {/* Store + meta */}
+            <div className="text-center space-y-0.5 pb-3 border-b border-dashed border-border">
+              <p className="text-lg font-black tracking-[0.2em] uppercase">LEDGR</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                Point of Sale Receipt
+              </p>
+              <p className="text-[11px] text-muted-foreground pt-1">
+                {dateStr} · {timeStr}
+              </p>
+              <p className="text-xs font-bold tracking-[0.15em]">#{orderId}</p>
+              {paymentInfo.customerName && paymentInfo.customerName !== 'Guest' && (
+                <p className="text-[11px] text-muted-foreground">
+                  {paymentInfo.customerName}
+                </p>
+              )}
+            </div>
+
+            {/* Items */}
+            <div className="space-y-2">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                Items
+              </p>
+              {paymentInfo.items.map((item, i) => (
+                <div key={i} className="space-y-0.5">
+                  <p className="text-xs font-bold truncate">{item.name}</p>
+                  <div className="flex justify-between text-[11px] text-muted-foreground pl-2">
+                    <span>{item.quantity} × {formatCurrency(Number(item.price))}</span>
+                    <span className="tabular-nums font-semibold text-foreground">
+                      {formatCurrency(Number(item.price) * item.quantity)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Totals */}
+            <div className="border-t border-dashed border-border pt-3 space-y-1">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                Summary
+              </p>
+              <div className="flex justify-between text-[11px] text-muted-foreground">
+                <span>Subtotal</span>
+                <span className="tabular-nums">{formatCurrency(paymentInfo.subtotal)}</span>
+              </div>
+              {paymentInfo.discount > 0 && (
+                <div className="flex justify-between text-[11px] text-primary">
+                  <span>Discount ({paymentInfo.discount}%)</span>
+                  <span className="tabular-nums">−{formatCurrency(paymentInfo.discountAmount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-[11px] text-muted-foreground">
+                <span>Tax ({(TAX_RATE * 100).toFixed(0)}%)</span>
+                <span className="tabular-nums">{formatCurrency(paymentInfo.tax)}</span>
+              </div>
+              <div className="flex justify-between text-sm font-black pt-2 border-t border-border">
+                <span>Total</span>
+                <span className="tabular-nums text-primary">
+                  {formatCurrency(paymentInfo.total)}
+                </span>
+              </div>
+            </div>
+
+            {/* Payment */}
+            <div className="border-t border-dashed border-border pt-3 space-y-1">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                Payment
+              </p>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-muted-foreground">Method</span>
+                <span className="font-semibold">
+                  {METHOD_LABELS[paymentInfo.method] ?? paymentInfo.method.toUpperCase()}
+                </span>
+              </div>
+              {paymentInfo.method === 'cash' && (
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-muted-foreground">Change</span>
+                  <span className="font-semibold tabular-nums">
+                    {formatCurrency(paymentInfo.change)}
+                  </span>
+                </div>
+              )}
+              {paymentInfo.method === 'momo' && paymentInfo.momoNetwork && (
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-muted-foreground">Network</span>
+                  <span className="font-semibold">
+                    {NETWORK_LABELS[paymentInfo.momoNetwork] ?? paymentInfo.momoNetwork}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Paid indicator */}
+            <div className="flex items-center justify-center gap-2 py-2 border border-primary/20 bg-primary/5 text-primary">
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              <span className="text-xs font-black uppercase tracking-widest">Paid</span>
+            </div>
+
+            {/* Footer */}
+            <div className="text-center space-y-1 pb-2">
+              <p className="text-xs font-bold tracking-widest">Thank you</p>
+              <p className="text-[10px] text-muted-foreground">
+                Please keep this receipt for your records
+              </p>
+              <p className="text-[9px] text-muted-foreground/50 uppercase tracking-widest pt-1">
+                Powered by Ledgr
+              </p>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="px-5 py-4 border-t border-border flex gap-3 shrink-0">
+            <Button
+              variant="outline"
+              className="flex-1 font-bold"
+              onClick={handleClose}
+            >
+              Close
+            </Button>
+            <Button
+              ref={printButtonRef}
+              className="flex-1 font-bold gap-2"
+              onClick={handlePrint}
+            >
+              <Printer className="h-4 w-4" aria-hidden="true" />
+              Print
+              <span className="text-[10px] opacity-60 font-normal">(P)</span>
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Divider type="thick" />
-
-      {/* ── ORDER META ── */}
-      <div style={{ textAlign: 'center', fontSize: '10px', lineHeight: '1.7', marginBottom: '2px' }}>
-        <div style={{ color: '#444' }}>{dateStr} · {timeStr}</div>
-        <div style={{
-          fontWeight: 'bold',
-          fontSize: '12px',
-          letterSpacing: '3px',
-          marginTop: '1px',
-        }}>
-          #{orderId}
+      {/* ── THERMAL PRINTOUT — hidden, only visible during window.print() ── */}
+      <div id="receipt-printout" style={{ display: 'none' }}>
+        <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '6px' }}>
+            LEDGR
+          </div>
+          <div style={{ fontSize: '8px', letterSpacing: '3px', textTransform: 'uppercase', color: '#555', marginTop: '2px' }}>
+            Point of Sale Receipt
+          </div>
         </div>
-        {paymentInfo.customerName && paymentInfo.customerName !== 'Guest' && (
-          <div style={{ marginTop: '2px', fontSize: '10px', color: '#333' }}>
-            {paymentInfo.customerName}
-          </div>
-        )}
-      </div>
 
-      <Divider type="dashed" />
+        <PrintDivider thick />
 
-      {/* ── ITEMS ── */}
-      <SectionLabel>Items</SectionLabel>
-      {paymentInfo.items.map((item, i) => (
-        <div key={i} style={{ marginBottom: '6px' }}>
-          <div style={{
-            fontSize: '11px',
-            fontWeight: 'bold',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            marginBottom: '1px',
-          }}>
-            {item.name}
+        <div style={{ textAlign: 'center', fontSize: '10px', lineHeight: '1.7', marginBottom: '4px' }}>
+          <div style={{ color: '#444' }}>{dateStr} · {timeStr}</div>
+          <div style={{ fontWeight: 'bold', fontSize: '12px', letterSpacing: '3px' }}>
+            #{orderId}
           </div>
-          <Row
-            label={`  ${item.quantity} × ${formatCurrency(Number(item.price))}`}
-            value={formatCurrency(Number(item.price) * item.quantity)}
-            indent
+          {paymentInfo.customerName && paymentInfo.customerName !== 'Guest' && (
+            <div style={{ fontSize: '10px', color: '#333' }}>
+              {paymentInfo.customerName}
+            </div>
+          )}
+        </div>
+
+        <PrintDivider />
+        <PrintSection>Items</PrintSection>
+        {paymentInfo.items.map((item, i) => (
+          <div key={i} style={{ marginBottom: '5px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 'bold' }}>{item.name}</div>
+            <PrintRow
+              label={`  ${item.quantity} × ${formatCurrency(Number(item.price))}`}
+              value={formatCurrency(Number(item.price) * item.quantity)}
+              muted
+            />
+          </div>
+        ))}
+
+        <PrintDivider />
+        <PrintSection>Summary</PrintSection>
+        <PrintRow label="Subtotal" value={formatCurrency(paymentInfo.subtotal)} muted />
+        {paymentInfo.discount > 0 && (
+          <PrintRow
+            label={`Discount (${paymentInfo.discount}%)`}
+            value={`-${formatCurrency(paymentInfo.discountAmount)}`}
             muted
           />
-        </div>
-      ))}
-
-      <Divider type="dashed" />
-
-      {/* ── TOTALS ── */}
-      <SectionLabel>Summary</SectionLabel>
-      <Row label="Subtotal" value={formatCurrency(paymentInfo.subtotal)} muted />
-
-      {paymentInfo.discount > 0 && (
-        <Row
-          label={`Discount (${paymentInfo.discount}%)`}
-          value={`−${formatCurrency(paymentInfo.discountAmount)}`}
+        )}
+        <PrintRow
+          label={`Tax (${(TAX_RATE * 100).toFixed(0)}%)`}
+          value={formatCurrency(paymentInfo.tax)}
           muted
         />
-      )}
-
-      <Row
-        label={`Tax (${(TAX_RATE * 100).toFixed(0)}%)`}
-        value={formatCurrency(paymentInfo.tax)}
-        muted
-      />
-
-      <div style={{ margin: '5px 0 2px' }}>
-        <Row
-          label="TOTAL"
-          value={formatCurrency(paymentInfo.total)}
-          bold
-          large
-        />
-      </div>
-
-      <Divider type="dashed" />
-
-      {/* ── PAYMENT ── */}
-      <SectionLabel>Payment</SectionLabel>
-      <Row
-        label="Method"
-        value={methodLabel[paymentInfo.method] ?? paymentInfo.method.toUpperCase()}
-      />
-      {paymentInfo.method === 'cash' && (
-        <Row label="Change" value={formatCurrency(paymentInfo.change)} />
-      )}
-      {paymentInfo.method === 'momo' && paymentInfo.momoNetwork && (
-        <Row
-          label="Network"
-          value={networkLabel[paymentInfo.momoNetwork] ?? paymentInfo.momoNetwork.toUpperCase()}
-        />
-      )}
-      {paymentInfo.method === 'momo' && paymentInfo.momoNumber && (
-        <Row label="Number" value={paymentInfo.momoNumber} />
-      )}
-
-      <Divider type="thick" />
-
-      {/* ── BARCODE ── */}
-      <Barcode value={orderId} />
-
-      <Divider type="dashed" />
-
-      {/* ── FOOTER ── */}
-      <div style={{
-        textAlign: 'center',
-        fontSize: '10px',
-        lineHeight: '1.9',
-        marginTop: '4px',
-        color: '#333',
-      }}>
-        <div style={{ fontWeight: 'bold', fontSize: '12px', letterSpacing: '2px' }}>
-          Thank you
+        <div style={{ margin: '5px 0' }}>
+          <PrintRow label="TOTAL" value={formatCurrency(paymentInfo.total)} bold large />
         </div>
-        <div style={{ fontSize: '9px', color: '#555' }}>
-          Please keep this receipt for your records
-        </div>
-        <div style={{
-          fontSize: '8px',
-          letterSpacing: '1px',
-          color: '#888',
-          marginTop: '6px',
-          textTransform: 'uppercase',
-        }}>
-          Powered by Ledgr · ledgr-xi.vercel.app
+
+        <PrintDivider />
+        <PrintSection>Payment</PrintSection>
+        <PrintRow
+          label="Method"
+          value={METHOD_LABELS[paymentInfo.method] ?? paymentInfo.method.toUpperCase()}
+        />
+        {paymentInfo.method === 'cash' && (
+          <PrintRow label="Change" value={formatCurrency(paymentInfo.change)} />
+        )}
+        {paymentInfo.method === 'momo' && paymentInfo.momoNetwork && (
+          <PrintRow
+            label="Network"
+            value={NETWORK_LABELS[paymentInfo.momoNetwork] ?? paymentInfo.momoNetwork}
+          />
+        )}
+
+        <PrintDivider thick />
+        <Barcode value={orderId} />
+        <PrintDivider />
+
+        <div style={{ textAlign: 'center', fontSize: '10px', lineHeight: '1.9', marginTop: '4px' }}>
+          <div style={{ fontWeight: 'bold', fontSize: '12px', letterSpacing: '2px' }}>
+            Thank you
+          </div>
+          <div style={{ fontSize: '9px', color: '#555' }}>
+            Please keep this receipt for your records
+          </div>
+          <div style={{ fontSize: '8px', color: '#888', marginTop: '6px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+            Powered by Ledgr
+          </div>
         </div>
       </div>
-
-    </div>
+    </>
   );
 }
